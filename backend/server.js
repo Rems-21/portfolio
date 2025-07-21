@@ -124,7 +124,7 @@ app.get('/api/testimonials', async (req, res) => {
   }
 });
 
-// Soumettre un nouveau témoignage et envoyer un email de vérification
+// Soumettre un nouveau témoignage (plus d'envoi d'email ici)
 app.post('/api/testimonials', async (req, res) => {
   const { name, position, company, rating, message, email } = req.body;
   if (!name || !message || !email) {
@@ -140,41 +140,9 @@ app.post('/api/testimonials', async (req, res) => {
     const testimonials = await kv.get('testimonials') || [];
     testimonials.push(newTestimonial);
     await kv.set('testimonials', testimonials);
-
-    // --- Logique d'envoi d'email ---
-    const verificationLink = `https://${process.env.VERCEL_URL}/verify-testimonial/${newTestimonial.id}`;
-    
-    const emailData = {
-      service_id: process.env.EMAILJS_SERVICE_ID,
-      template_id: process.env.EMAILJS_TEMPLATE_ID,
-      user_id: process.env.EMAILJS_USER_ID,
-      accessToken: process.env.EMAILJS_PRIVATE_KEY, // Utilisation de la clé privée pour l'API REST
-      template_params: {
-        to_name: name,
-        to_email: email, // Assure-toi que ton template a une variable pour l'email du destinataire
-        from_name: 'DSONKOUAT Remus Herlandes',
-        verification_link: verificationLink,
-        // Ajoute d'autres variables si ton template en a besoin
-        name,
-        position,
-        company,
-        rating,
-        message,
-      }
-    };
-
-    try {
-      await axios.post('https://api.emailjs.com/api/v1.0/email/send', emailData);
-      res.status(201).json({ success: true, message: 'Témoignage soumis. Un email de vérification a été envoyé.' });
-    } catch (emailError) {
-      console.error("Erreur lors de l'envoi de l'email:", emailError.response ? emailError.response.data : emailError.message);
-      // Même si l'email échoue, le témoignage est sauvegardé.
-      res.status(500).json({ success: false, message: "Le témoignage a été sauvegardé, mais l'envoi de l'email de vérification a échoué." });
-    }
-
+    res.status(201).json({ success: true, id: newTestimonial.id });
   } catch (error) {
-    console.error("Erreur KV ou EmailJS:", error);
-    res.status(500).json({ success: false, message: "Erreur lors de la sauvegarde ou de l'envoi de l'email." });
+    res.status(500).json({ success: false, message: "Erreur lors de la sauvegarde du témoignage." });
   }
 });
 
