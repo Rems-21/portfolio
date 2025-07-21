@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import avatar from '../assets/avatar2.jpg';
 
 const Hero = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const scrollToProjects = () => {
     const element = document.getElementById('projects');

@@ -99,16 +99,10 @@ const Projects = () => {
   const { t, i18n } = useTranslation();
   const lang = i18n.language === 'fr' ? 'fr' : 'en';
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
-
-  const handleDetailClick = (projectId) => {
-    console.log(`Détails du projet ${projectId}`);
-  };
 
   const goToNext = () => {
     setCurrentIndex((prev) => {
       if (prev === projects.length - 1) {
-        setDirection(-1);
         return prev - 1;
       }
       return prev + 1;
@@ -118,7 +112,6 @@ const Projects = () => {
   const goToPrev = () => {
     setCurrentIndex((prev) => {
       if (prev === 0) {
-        setDirection(1);
         return prev + 1;
       }
       return prev - 1;
