@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 // La logique emailjs est maintenant côté backend
 // import emailjs from 'emailjs-com';
 // import emailConfig from '../emailConfig';
+import { Helmet } from 'react-helmet-async';
 
 const availableStickers = ['👍', '❤️', '🎉', '🚀', '🤔'];
 
@@ -170,6 +171,18 @@ const Testimonials = () => {
 
   return (
     <section id="testimonials" className="testimonials">
+      <Helmet>
+        <title>{lang === 'fr' ? 'Témoignages – Remus Herlandes' : 'Testimonials – Remus Herlandes'}</title>
+        <meta name="description" content={lang === 'fr'
+          ? 'Avis et témoignages clients sur le travail de Remus Herlandes, graphiste et développeur web.'
+          : 'Client reviews and testimonials about Remus Herlandes, graphic designer and web developer.'}
+        />
+        <meta property="og:title" content={lang === 'fr' ? 'Témoignages – Remus Herlandes' : 'Testimonials – Remus Herlandes'} />
+        <meta property="og:description" content={lang === 'fr'
+          ? 'Avis et témoignages clients sur le travail de Remus Herlandes, graphiste et développeur web.'
+          : 'Client reviews and testimonials about Remus Herlandes, graphic designer and web developer.'}
+        />
+      </Helmet>
       <div className="container">
         <h2 className="section-title">{lang === 'fr' ? 'Témoignages Clients' : 'Client Testimonials'}</h2>
         

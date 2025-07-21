@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 
 const parcoursData = [
@@ -49,27 +50,41 @@ const parcoursData = [
 ];
 
 const Parcours = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const lang = i18n.language === 'fr' ? 'fr' : 'en';
 
   return (
-    <section id="parcours" className="parcours">
-      <div className="container">
-        <h2 className="section-title">{lang === 'fr' ? 'Mon Parcours' : 'My Journey'}</h2>
-        <div className="timeline">
-          {parcoursData.map((step, idx) => (
-            <div className="timeline-item" key={idx}>
-              <div className="timeline-dot"></div>
-              <div className="timeline-content">
-                <span className="timeline-year">{step.year}</span>
-                <h3 className="timeline-title">{step[lang].title}</h3>
-                <p className="timeline-desc">{step[lang].desc}</p>
+    <>
+      <Helmet>
+        <title>{lang === 'fr' ? 'Parcours – Remus Herlandes' : 'Background – Remus Herlandes'}</title>
+        <meta name="description" content={lang === 'fr'
+          ? 'Découvrez le parcours académique et professionnel de Remus Herlandes.'
+          : 'Discover the academic and professional background of Remus Herlandes.'}
+        />
+        <meta property="og:title" content={lang === 'fr' ? 'Parcours – Remus Herlandes' : 'Background – Remus Herlandes'} />
+        <meta property="og:description" content={lang === 'fr'
+          ? 'Découvrez le parcours académique et professionnel de Remus Herlandes.'
+          : 'Discover the academic and professional background of Remus Herlandes.'}
+        />
+      </Helmet>
+      <section id="parcours" className="parcours">
+        <div className="container">
+          <h2 className="section-title">{lang === 'fr' ? 'Mon Parcours' : 'My Journey'}</h2>
+          <div className="timeline">
+            {parcoursData.map((step, idx) => (
+              <div className="timeline-item" key={idx}>
+                <div className="timeline-dot"></div>
+                <div className="timeline-content">
+                  <span className="timeline-year">{step.year}</span>
+                  <h3 className="timeline-title">{step[lang].title}</h3>
+                  <p className="timeline-desc">{step[lang].desc}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 };
 

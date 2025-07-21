@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 
 const projects = [
@@ -119,79 +120,93 @@ const Projects = () => {
   };
 
   return (
-    <section id="projects" className="projects">
-      <div className="container">
-        <h2 className="section-title">{t('projects.title')}</h2>
-        <div className="projects-slider">
-          <button 
-            className="slider-arrow left" 
-            onClick={goToPrev}
-            aria-label="Précédent"
-          >
-            &#8592;
-          </button>
-          
-          <div className="projects-container">
-            {projects.map((project, idx) => {
-              const distance = Math.abs(idx - currentIndex);
-              const isActive = idx === currentIndex;
-              const isVisible = distance <= 1;
-              
-              return (
-                <div 
-                  key={project.id}
-                  className={`project-card ${isActive ? 'active' : ''}`}
-                  style={{
-                    transform: `translateX(${(idx - currentIndex) * 100}%)`,
-                    opacity: isVisible ? (isActive ? 1 : 0.6) : 0,
-                    zIndex: isActive ? 10 : 5,
-                    filter: isActive ? 'none' : 'blur(1px) grayscale(40%)'
-                  }}
-                >
-                  <div className="project-image">
-                    <span className="project-icon">{project.image}</span>
-                  </div>
-                  <div className="project-content">
-                    <h3 className="project-title">
-                      {project.title[lang]}
-                    </h3>
-                    <p className="project-description">
-                      {project.description[lang]}
-                    </p>
-                    <div className="project-technologies">
-                      {project.technologies.map((tech, i) => (
-                        <span key={i} className="tech-tag">{tech}</span>
-                      ))}
+    <>
+      <Helmet>
+        <title>{lang === 'fr' ? 'Projets – Remus Herlandes' : 'Projects – Remus Herlandes'}</title>
+        <meta name="description" content={lang === 'fr'
+          ? 'Découvrez les projets réalisés par Remus Herlandes : web, graphisme, IA, automation, etc.'
+          : 'Discover projects by Remus Herlandes: web, graphic design, AI, automation, and more.'}
+        />
+        <meta property="og:title" content={lang === 'fr' ? 'Projets – Remus Herlandes' : 'Projects – Remus Herlandes'} />
+        <meta property="og:description" content={lang === 'fr'
+          ? 'Découvrez les projets réalisés par Remus Herlandes : web, graphisme, IA, automation, etc.'
+          : 'Discover projects by Remus Herlandes: web, graphic design, AI, automation, and more.'}
+        />
+      </Helmet>
+      <section id="projects" className="projects">
+        <div className="container">
+          <h2 className="section-title">{t('projects.title')}</h2>
+          <div className="projects-slider">
+            <button 
+              className="slider-arrow left" 
+              onClick={goToPrev}
+              aria-label="Précédent"
+            >
+              &#8592;
+            </button>
+            
+            <div className="projects-container">
+              {projects.map((project, idx) => {
+                const distance = Math.abs(idx - currentIndex);
+                const isActive = idx === currentIndex;
+                const isVisible = distance <= 1;
+                
+                return (
+                  <div 
+                    key={project.id}
+                    className={`project-card ${isActive ? 'active' : ''}`}
+                    style={{
+                      transform: `translateX(${(idx - currentIndex) * 100}%)`,
+                      opacity: isVisible ? (isActive ? 1 : 0.6) : 0,
+                      zIndex: isActive ? 10 : 5,
+                      filter: isActive ? 'none' : 'blur(1px) grayscale(40%)'
+                    }}
+                  >
+                    <div className="project-image">
+                      <span className="project-icon">{project.image}</span>
                     </div>
-                    <button 
-                      className="project-detail-btn"
-                      onClick={() => window.open('https://github.com/Rems-21', '_blank')}
-                    >
-                      {lang === 'fr' ? 'Détails sur GitHub' : 'Details on GitHub'}
-                    </button>
+                    <div className="project-content">
+                      <h3 className="project-title">
+                        {project.title[lang]}
+                      </h3>
+                      <p className="project-description">
+                        {project.description[lang]}
+                      </p>
+                      <div className="project-technologies">
+                        {project.technologies.map((tech, i) => (
+                          <span key={i} className="tech-tag">{tech}</span>
+                        ))}
+                      </div>
+                      <button 
+                        className="project-detail-btn"
+                        onClick={() => window.open('https://github.com/Rems-21', '_blank')}
+                      >
+                        {lang === 'fr' ? 'Détails sur GitHub' : 'Details on GitHub'}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            
+            <button 
+              className="slider-arrow right" 
+              onClick={goToNext}
+              aria-label="Suivant"
+            >
+              &#8594;
+            </button>
           </div>
           
-          <button 
-            className="slider-arrow right" 
-            onClick={goToNext}
-            aria-label="Suivant"
-          >
-            &#8594;
-          </button>
+          <div className="projects-progress-bar-wrapper">
+            <div
+              className="projects-progress-bar"
+              style={{ width: `${((currentIndex + 1) / projects.length) * 100}%` }}
+            ></div>
+          </div>
         </div>
-        
-        <div className="projects-progress-bar-wrapper">
-          <div
-            className="projects-progress-bar"
-            style={{ width: `${((currentIndex + 1) / projects.length) * 100}%` }}
-          ></div>
-        </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 };
 
