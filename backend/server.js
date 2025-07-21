@@ -110,14 +110,11 @@ app.post('/api/chatbot-qa', authenticateToken, (req, res) => {
   }
 
   const newQA = { keywords, answer };
-  // L'écriture est désactivée pour la stabilité sur Vercel
-  /*
   const qaData = readQADatabase();
   qaData.push(newQA);
   writeQADatabase(qaData);
-  */
 
-  res.status(201).json({ success: true, message: 'Connaissance ajoutée au chatbot (simulation).' });
+  res.status(201).json({ success: true, message: 'Connaissance ajoutée au chatbot.' });
 });
 
 // Récupérer toutes les questions posées par les utilisateurs (protégée)
@@ -157,17 +154,12 @@ app.post('/api/testimonials', async (req, res) => {
     date: new Date().toISOString()
   };
 
-  // On désactive temporairement la sauvegarde du témoignage sur Vercel
-  // car le système de fichiers est en lecture seule (problème d'écriture).
-  /*
   const testimonials = readTestimonials();
   testimonials.push(newTestimonial);
   writeTestimonials(testimonials);
-  */
 
   // --- Logique d'envoi d'email ---
-  // Correction: Utilisation de l'hôte dynamique pour le lien de vérification
-  const verificationLink = `https://${req.headers.host}/api/testimonials/verify/${newTestimonial.id}`;
+  const verificationLink = `http://localhost:3000/verify-testimonial/${newTestimonial.id}`;
   
   const emailData = {
     service_id: EMAILJS_SERVICE_ID,
@@ -201,10 +193,6 @@ app.post('/api/testimonials', async (req, res) => {
 // Vérifier un témoignage (validation par lien)
 app.get('/api/testimonials/verify/:id', (req, res) => {
   const { id } = req.params;
-
-  // On désactive temporairement la vérification car elle nécessite d'écrire
-  // dans un fichier, ce qui est impossible sur Vercel.
-  /*
   const testimonials = readTestimonials();
   const idx = testimonials.findIndex(t => t.id === id);
   if (idx === -1) {
@@ -215,11 +203,8 @@ app.get('/api/testimonials/verify/:id', (req, res) => {
   }
   testimonials[idx].verified = true;
   writeTestimonials(testimonials);
-  */
-  
   // Redirige vers une page de succès sur ton site
-  // Le témoignage ne sera pas réellement vérifié, mais l'utilisateur verra la confirmation.
-  res.redirect(`https://${req.headers.host}/testimonialConfirmation`);
+  res.redirect('http://localhost:3000/testimonialConfirmation');
 });
 
 // --- Nouvelle route pour les questions du Chatbot ---
@@ -229,8 +214,6 @@ app.post('/api/chatbot-questions', (req, res) => {
     return res.status(400).json({ error: 'La question est invalide.' });
   }
 
-  // L'écriture est désactivée pour la stabilité sur Vercel
-  /*
   const newQuestion = {
     id: uuidv4(),
     question: question.trim(),
@@ -240,9 +223,8 @@ app.post('/api/chatbot-questions', (req, res) => {
   const questions = readChatbotQuestions();
   questions.push(newQuestion);
   writeChatbotQuestions(questions);
-  */
 
-  res.status(201).json({ success: true, message: 'Question enregistrée (simulation).' });
+  res.status(201).json({ success: true, message: 'Question enregistrée.' });
 });
 
 // --- Nouvelle route pour interroger le chatbot ---
@@ -255,9 +237,7 @@ app.post('/api/ask-chatbot', (req, res) => {
   const qaDatabase = readQADatabase();
   const answer = findBestAnswer(question, lang, qaDatabase);
 
-  // On désactive temporairement la sauvegarde de la question sur Vercel
-  // car le système de fichiers est en lecture seule (problème d'écriture).
-  /*
+  // Sauvegarder la question de l'utilisateur (comme avant)
   const newQuestion = {
     id: uuidv4(),
     question: question.trim(),
@@ -266,7 +246,6 @@ app.post('/api/ask-chatbot', (req, res) => {
   const questions = readChatbotQuestions();
   questions.push(newQuestion);
   writeChatbotQuestions(questions);
-  */
 
   res.json({ answer });
 });

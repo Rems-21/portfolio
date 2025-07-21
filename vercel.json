@@ -22,14 +22,5 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "functions": {
-    "backend/server.js": {
-      "includeFiles": [
-        "backend/testimonials.json",
-        "backend/chatbot-questions.json",
-        "backend/qa-database.json"
-      ]
-    }
-  }
+  ]
 } 
