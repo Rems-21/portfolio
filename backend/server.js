@@ -19,10 +19,21 @@ const INITIAL_QA_DATABASE_FILE = path.join(__dirname, 'qa-database.json');
 
 
 // --- Configuration CORS ---
+// CONFIGURATION TEMPORAIRE POUR LE DÉBOGAGE.
+// Ceci autorise toutes les origines, ce qui nous permettra de confirmer si le problème est bien lié à CORS.
+app.use(cors());
+
+/*
+// Ancienne configuration CORS (à restaurer et corriger après le débogage)
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', `https://${process.env.VERCEL_URL}`],
+  origin: [
+    'http://localhost:3000', 
+    'http://127.0.0.1:3000', 
+    `https://${process.env.VERCEL_URL}`
+  ],
   optionsSuccessStatus: 200
 }));
+*/
 
 app.use(bodyParser.json());
 
