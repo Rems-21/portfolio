@@ -110,11 +110,14 @@ app.post('/api/chatbot-qa', authenticateToken, (req, res) => {
   }
 
   const newQA = { keywords, answer };
+  // L'écriture est désactivée pour la stabilité sur Vercel
+  /*
   const qaData = readQADatabase();
   qaData.push(newQA);
   writeQADatabase(qaData);
+  */
 
-  res.status(201).json({ success: true, message: 'Connaissance ajoutée au chatbot.' });
+  res.status(201).json({ success: true, message: 'Connaissance ajoutée au chatbot (simulation).' });
 });
 
 // Récupérer toutes les questions posées par les utilisateurs (protégée)
@@ -226,6 +229,8 @@ app.post('/api/chatbot-questions', (req, res) => {
     return res.status(400).json({ error: 'La question est invalide.' });
   }
 
+  // L'écriture est désactivée pour la stabilité sur Vercel
+  /*
   const newQuestion = {
     id: uuidv4(),
     question: question.trim(),
@@ -235,8 +240,9 @@ app.post('/api/chatbot-questions', (req, res) => {
   const questions = readChatbotQuestions();
   questions.push(newQuestion);
   writeChatbotQuestions(questions);
+  */
 
-  res.status(201).json({ success: true, message: 'Question enregistrée.' });
+  res.status(201).json({ success: true, message: 'Question enregistrée (simulation).' });
 });
 
 // --- Nouvelle route pour interroger le chatbot ---
