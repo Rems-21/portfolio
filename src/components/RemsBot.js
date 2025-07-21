@@ -81,7 +81,7 @@ const RemsBot = () => {
     const newLang = lang === 'fr' ? 'en' : 'fr';
     i18n.changeLanguage(newLang);
   };
-  
+
   // Couleurs dark
   const mainBlue = '#007bff';
   const darkBg = '#101828';
