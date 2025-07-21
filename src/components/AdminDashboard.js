@@ -10,6 +10,13 @@ const STATUS_LABELS = {
   pending: 'En attente',
 };
 
+const SIDEBAR_SECTIONS = [
+  { key: 'stats', label: 'Statistiques', icon: '📊' },
+  { key: 'testimonials', label: 'Témoignages', icon: '📝' },
+  { key: 'chatbot', label: 'Chatbot', icon: '🤖' },
+  { key: 'questions', label: 'Questions', icon: '❓' },
+];
+
 const AdminDashboard = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [stats, setStats] = useState(null);
@@ -26,6 +33,7 @@ const AdminDashboard = () => {
   const [qaEdit, setQaEdit] = useState({ keywords_fr: '', keywords_en: '', answer_fr: '', answer_en: '' });
   const [questions, setQuestions] = useState([]);
   const [chatbotStats, setChatbotStats] = useState(null);
+  const [activeSection, setActiveSection] = useState('stats');
 
   // --- Gestion avancée des témoignages ---
   useEffect(() => {
@@ -274,165 +282,225 @@ const AdminDashboard = () => {
   const totalQaPages = Math.ceil(filteredQa.length / qaPerPage);
 
   return (
-    <div className="admin-dashboard">
-      <h1>Tableau de Bord - Témoignages</h1>
-      {notif && (
-        <div className={`notif ${notifType}`}>{notif}</div>
-      )}
-      <div className="dashboard-section">
-        <h2>Statistiques</h2>
-        {stats ? (
-          <ul className="stats-list">
-            <li>Total : {stats.total}</li>
-            <li>Validés : {stats.validated}</li>
-            <li>Refusés : {stats.refused}</li>
-            <li>En attente : {stats.pending}</li>
-          </ul>
-        ) : <p>Chargement...</p>}
-      </div>
-      <div className="dashboard-section">
-        <h2>Gestion des Témoignages</h2>
-        <div className="filters">
-          <select value={filter} onChange={e => setFilter(e.target.value)}>
-            <option value="all">Tous</option>
-            <option value="validated">Validés</option>
-            <option value="pending">En attente</option>
-            <option value="refused">Refusés</option>
-          </select>
-          <input
-            type="text"
-            placeholder="Recherche par nom, email, message..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-        {loading ? <p>Chargement...</p> : (
-          <>
-          <table className="testimonials-table">
-            <thead>
-              <tr>
-                <th>Nom</th>
-                <th>Email</th>
-                <th>Date</th>
-                <th>Statut</th>
-                <th>Message</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedTestimonials.length === 0 ? (
-                <tr><td colSpan={6}>Aucun témoignage trouvé.</td></tr>
-              ) : paginatedTestimonials.map(t => (
-                <tr key={t.id} className={t.verified ? 'validated' : t.status === 'refused' ? 'refused' : 'pending'}>
-                  <td>{t.name}</td>
-                  <td>{t.email}</td>
-                  <td>{t.date ? new Date(t.date).toLocaleDateString() : ''}</td>
-                  <td>{t.verified ? STATUS_LABELS.validated : t.status === 'refused' ? STATUS_LABELS.refused : STATUS_LABELS.pending}</td>
-                  <td style={{maxWidth: 200, whiteSpace: 'pre-line'}}>{t.message}</td>
-                  <td>
-                    {!t.verified && t.status !== 'refused' && (
-                      <button onClick={() => handleAction(t.id, 'validate')}>Valider</button>
-                    )}
-                    {t.status !== 'refused' && t.verified !== true && (
-                      <button onClick={() => handleAction(t.id, 'refuse')}>Refuser</button>
-                    )}
-                    <button onClick={() => handleAction(t.id, 'delete')} className="danger">Supprimer</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="pagination">
-            <button onClick={() => setTestimonialPage(p => Math.max(1, p-1))} disabled={testimonialPage === 1}>Précédent</button>
-            <span>Page {testimonialPage} / {totalTestimonialPages}</span>
-            <button onClick={() => setTestimonialPage(p => Math.min(totalTestimonialPages, p+1))} disabled={testimonialPage === totalTestimonialPages}>Suivant</button>
-          </div>
-          </>
+    <div className="dashboard-root">
+      <aside className="sidebar">
+        <div className="sidebar-logo">RemusAdmin</div>
+        <nav className="sidebar-nav">
+          {SIDEBAR_SECTIONS.map(sec => (
+            <button
+              key={sec.key}
+              className={`sidebar-link${activeSection === sec.key ? ' active' : ''}`}
+              onClick={() => setActiveSection(sec.key)}
+            >
+              <span className="sidebar-icon">{sec.icon}</span>
+              <span className="sidebar-label">{sec.label}</span>
+            </button>
+          ))}
+        </nav>
+        <button className="sidebar-link logout" onClick={() => { localStorage.removeItem('authToken'); window.location.href = '/login'; }}>
+          <span className="sidebar-icon">🚪</span>
+          <span className="sidebar-label">Déconnexion</span>
+        </button>
+      </aside>
+      <main className="dashboard-main">
+        <h1>Tableau de Bord - Administration</h1>
+        {notif && (
+          <div className={`notif ${notifType}`}>{notif}</div>
         )}
-      </div>
-      {/* ... Section chatbot existante ... */}
-      <div className="dashboard-section">
-        <h2>Base de connaissances du Chatbot</h2>
-        <div className="filters">
-          <input
-            type="text"
-            placeholder="Recherche Q&A par mot-clé..."
-            value={qaSearch}
-            onChange={e => setQaSearch(e.target.value)}
-          />
-        </div>
-        <table className="qa-table">
-          <thead>
-            <tr>
-              <th>Mots-clés (FR)</th>
-              <th>Mots-clés (EN)</th>
-              <th>Réponses (FR)</th>
-              <th>Réponses (EN)</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedQa.length === 0 ? (
-              <tr><td colSpan={5}>Aucune Q&A trouvée.</td></tr>
-            ) : paginatedQa.map((qa, i) => {
-              const realIndex = (qaPage-1)*qaPerPage + i;
-              return (
-                <tr key={realIndex}>
-                  <td>{qa.keywords.fr?.join(', ')}</td>
-                  <td>{qa.keywords.en?.join(', ')}</td>
-                  <td>{Array.isArray(qa.answer.fr) ? qa.answer.fr.join(' | ') : qa.answer.fr}</td>
-                  <td>{Array.isArray(qa.answer.en) ? qa.answer.en.join(' | ') : qa.answer.en}</td>
-                  <td>
-                    <button onClick={() => handleQaEdit(realIndex)}>Éditer</button>
-                    <button onClick={() => handleQaDelete(realIndex)} className="danger">Supprimer</button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <div className="pagination">
-          <button onClick={() => setQaPage(p => Math.max(1, p-1))} disabled={qaPage === 1}>Précédent</button>
-          <span>Page {qaPage} / {totalQaPages}</span>
-          <button onClick={() => setQaPage(p => Math.min(totalQaPages, p+1))} disabled={qaPage === totalQaPages}>Suivant</button>
-        </div>
-        {/* Formulaire édition/ajout Q&A */}
-        {qaEditIndex !== null && (
-          <div className="qa-edit-form">
-            <h3>{qaEditIndex === 'new' ? 'Nouvelle Q&A' : 'Éditer Q&A'}</h3>
-            <input type="text" placeholder="Mots-clés FR" value={qaEdit.keywords_fr} onChange={e => setQaEdit({ ...qaEdit, keywords_fr: e.target.value })} />
-            <input type="text" placeholder="Mots-clés EN" value={qaEdit.keywords_en} onChange={e => setQaEdit({ ...qaEdit, keywords_en: e.target.value })} />
-            <textarea placeholder="Réponses FR (séparées par |)" value={qaEdit.answer_fr} onChange={e => setQaEdit({ ...qaEdit, answer_fr: e.target.value })} />
-            <textarea placeholder="Réponses EN (séparées par |)" value={qaEdit.answer_en} onChange={e => setQaEdit({ ...qaEdit, answer_en: e.target.value })} />
-            <button onClick={qaEditIndex === 'new' ? handleQaNewSave : handleQaEditSave} className="primary">Enregistrer</button>
-            <button onClick={() => setQaEditIndex(null)}>Annuler</button>
+        {activeSection === 'stats' && (
+          <div className="dashboard-grid">
+            <div className="card">
+              <div className="card-title"><span className="card-icon">📊</span> Statistiques Témoignages</div>
+              <div className="card-content">
+                {stats ? (
+                  <ul className="stats-list">
+                    <li>Total : {stats.total}</li>
+                    <li className="validated">Validés : {stats.validated}</li>
+                    <li className="refused">Refusés : {stats.refused}</li>
+                    <li className="pending">En attente : {stats.pending}</li>
+                  </ul>
+                ) : <p>Chargement...</p>}
+              </div>
+            </div>
+            <div className="card">
+              <div className="card-title"><span className="card-icon">🤖</span> Statistiques Chatbot</div>
+              <div className="card-content">
+                {chatbotStats ? (
+                  <ul className="stats-list">
+                    <li>Questions posées : {chatbotStats.total}</li>
+                  </ul>
+                ) : <p>Chargement...</p>}
+              </div>
+            </div>
           </div>
         )}
-      </div>
-      <div className="dashboard-section">
-        <h2>Questions des Utilisateurs</h2>
-        <p>Voici les dernières questions posées par les visiteurs. Cliquez sur une question pour l'utiliser comme base pour une nouvelle Q&A.</p>
-        <ul className="questions-list">
-          {questions.length > 0 ? (
-            questions.map(q => (
-              <li key={q.id} onClick={() => handleTeachResponse(q.question)}>
-                <span className="question-text">{q.question}</span>
-                <span className="question-date">{new Date(q.timestamp).toLocaleString()}</span>
-              </li>
-            ))
-          ) : (
-            <p>Aucune question d'utilisateur pour le moment.</p>
-          )}
-        </ul>
-      </div>
-      <div className="dashboard-section">
-        <h2>Statistiques Chatbot</h2>
-        {chatbotStats ? (
-          <ul className="stats-list">
-            <li>Nombre total de questions posées : {chatbotStats.total}</li>
-          </ul>
-        ) : <p>Chargement...</p>}
-      </div>
+        {activeSection === 'testimonials' && (
+          <div className="dashboard-grid">
+            <div className="card">
+              <div className="card-title"><span className="card-icon">📝</span> Gestion des Témoignages</div>
+              <div className="card-content">
+                <div className="filters">
+                  <div className="search-bar">
+                    <span className="search-icon">🔍</span>
+                    <input
+                      type="text"
+                      placeholder="Recherche par nom, email, message..."
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                    />
+                    {search && <button className="clear-btn" onClick={() => setSearch(' ')} title="Effacer">×</button>}
+                  </div>
+                  <select value={filter} onChange={e => setFilter(e.target.value)}>
+                    <option value="all">Tous</option>
+                    <option value="validated">Validés</option>
+                    <option value="pending">En attente</option>
+                    <option value="refused">Refusés</option>
+                  </select>
+                </div>
+                {loading ? <p>Chargement...</p> : (
+                  <>
+                  <table className="testimonials-table">
+                    <thead>
+                      <tr>
+                        <th>Nom</th>
+                        <th>Email</th>
+                        <th>Date</th>
+                        <th>Statut</th>
+                        <th>Message</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedTestimonials.length === 0 ? (
+                        <tr><td colSpan={6}>Aucun témoignage trouvé.</td></tr>
+                      ) : paginatedTestimonials.map(t => (
+                        <tr key={t.id} className={t.verified ? 'validated' : t.status === 'refused' ? 'refused' : 'pending'}>
+                          <td>{t.name}</td>
+                          <td>{t.email}</td>
+                          <td>{t.date ? new Date(t.date).toLocaleDateString() : ''}</td>
+                          <td>{t.verified ? STATUS_LABELS.validated : t.status === 'refused' ? STATUS_LABELS.refused : STATUS_LABELS.pending}</td>
+                          <td style={{maxWidth: 200, whiteSpace: 'pre-line'}}>{t.message}</td>
+                          <td>
+                            {!t.verified && t.status !== 'refused' && (
+                              <button onClick={() => handleAction(t.id, 'validate')}>Valider</button>
+                            )}
+                            {t.status !== 'refused' && t.verified !== true && (
+                              <button onClick={() => handleAction(t.id, 'refuse')}>Refuser</button>
+                            )}
+                            <button onClick={() => handleAction(t.id, 'delete')} className="danger">Supprimer</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="pagination">
+                    <button onClick={() => setTestimonialPage(p => Math.max(1, p-1))} disabled={testimonialPage === 1}>Précédent</button>
+                    <span>Page {testimonialPage} / {totalTestimonialPages}</span>
+                    <button onClick={() => setTestimonialPage(p => Math.min(totalTestimonialPages, p+1))} disabled={testimonialPage === totalTestimonialPages}>Suivant</button>
+                  </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        {activeSection === 'chatbot' && (
+          <div className="dashboard-grid">
+            <div className="card">
+              <div className="card-title"><span className="card-icon">💡</span> Base de connaissances du Chatbot</div>
+              <div className="card-content">
+                <div className="filters">
+                  <div className="search-bar">
+                    <span className="search-icon">🔍</span>
+                    <input
+                      type="text"
+                      placeholder="Recherche Q&A par mot-clé..."
+                      value={qaSearch}
+                      onChange={e => setQaSearch(e.target.value)}
+                    />
+                    {qaSearch && <button className="clear-btn" onClick={() => setQaSearch('')} title="Effacer">×</button>}
+                  </div>
+                </div>
+                <table className="qa-table">
+                  <thead>
+                    <tr>
+                      <th>Mots-clés (FR)</th>
+                      <th>Mots-clés (EN)</th>
+                      <th>Réponses (FR)</th>
+                      <th>Réponses (EN)</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedQa.length === 0 ? (
+                      <tr><td colSpan={5}>Aucune Q&A trouvée.</td></tr>
+                    ) : paginatedQa.map((qa, i) => {
+                      const realIndex = (qaPage-1)*qaPerPage + i;
+                      return (
+                        <tr key={realIndex}>
+                          <td>{qa.keywords.fr?.join(', ')}</td>
+                          <td>{qa.keywords.en?.join(', ')}</td>
+                          <td>{Array.isArray(qa.answer.fr) ? qa.answer.fr.join(' | ') : qa.answer.fr}</td>
+                          <td>{Array.isArray(qa.answer.en) ? qa.answer.en.join(' | ') : qa.answer.en}</td>
+                          <td>
+                            <button onClick={() => handleQaEdit(realIndex)}>Éditer</button>
+                            <button onClick={() => handleQaDelete(realIndex)} className="danger">Supprimer</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <div className="pagination">
+                  <button onClick={() => setQaPage(p => Math.max(1, p-1))} disabled={qaPage === 1}>Précédent</button>
+                  <span>Page {qaPage} / {totalQaPages}</span>
+                  <button onClick={() => setQaPage(p => Math.min(totalQaPages, p+1))} disabled={qaPage === totalQaPages}>Suivant</button>
+                </div>
+                {/* Formulaire édition/ajout Q&A */}
+                {qaEditIndex !== null && (
+                  <div className="qa-edit-form">
+                    <h3>{qaEditIndex === 'new' ? 'Nouvelle Q&A' : 'Éditer Q&A'}</h3>
+                    <label htmlFor="qa-keywords-fr">Mots-clés FR</label>
+                    <input id="qa-keywords-fr" type="text" placeholder="Mots-clés FR" value={qaEdit.keywords_fr} onChange={e => setQaEdit({ ...qaEdit, keywords_fr: e.target.value })} />
+                    <label htmlFor="qa-keywords-en">Mots-clés EN</label>
+                    <input id="qa-keywords-en" type="text" placeholder="Mots-clés EN" value={qaEdit.keywords_en} onChange={e => setQaEdit({ ...qaEdit, keywords_en: e.target.value })} />
+                    <label htmlFor="qa-answer-fr">Réponses FR (séparées par |)</label>
+                    <textarea id="qa-answer-fr" placeholder="Réponses FR (séparées par |)" value={qaEdit.answer_fr} onChange={e => setQaEdit({ ...qaEdit, answer_fr: e.target.value })} />
+                    <label htmlFor="qa-answer-en">Réponses EN (séparées par |)</label>
+                    <textarea id="qa-answer-en" placeholder="Réponses EN (séparées par |)" value={qaEdit.answer_en} onChange={e => setQaEdit({ ...qaEdit, answer_en: e.target.value })} />
+                    <div className="form-actions">
+                      <button onClick={qaEditIndex === 'new' ? handleQaNewSave : handleQaEditSave} className="primary">Enregistrer</button>
+                      <button onClick={() => setQaEditIndex(null)}>Annuler</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        {activeSection === 'questions' && (
+          <div className="dashboard-grid">
+            <div className="card">
+              <div className="card-title"><span className="card-icon">❓</span> Questions des Utilisateurs</div>
+              <div className="card-content">
+                <p>Voici les dernières questions posées par les visiteurs. Cliquez sur une question pour l'utiliser comme base pour une nouvelle Q&A.</p>
+                <ul className="questions-list">
+                  {questions.length > 0 ? (
+                    questions.map(q => (
+                      <li key={q.id} onClick={() => handleTeachResponse(q.question)}>
+                        <span className="question-text">{q.question}</span>
+                        <span className="question-date">{new Date(q.timestamp).toLocaleString()}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <p>Aucune question d'utilisateur pour le moment.</p>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 };
