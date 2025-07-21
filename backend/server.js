@@ -154,12 +154,17 @@ app.post('/api/testimonials', async (req, res) => {
     date: new Date().toISOString()
   };
 
+  // On désactive temporairement la sauvegarde du témoignage sur Vercel
+  // car le système de fichiers est en lecture seule (problème d'écriture).
+  /*
   const testimonials = readTestimonials();
   testimonials.push(newTestimonial);
   writeTestimonials(testimonials);
+  */
 
   // --- Logique d'envoi d'email ---
-  const verificationLink = `http://localhost:3000/verify-testimonial/${newTestimonial.id}`;
+  // Correction: Utilisation de l'hôte dynamique pour le lien de vérification
+  const verificationLink = `https://${req.headers.host}/api/testimonials/verify/${newTestimonial.id}`;
   
   const emailData = {
     service_id: EMAILJS_SERVICE_ID,
@@ -193,6 +198,10 @@ app.post('/api/testimonials', async (req, res) => {
 // Vérifier un témoignage (validation par lien)
 app.get('/api/testimonials/verify/:id', (req, res) => {
   const { id } = req.params;
+
+  // On désactive temporairement la vérification car elle nécessite d'écrire
+  // dans un fichier, ce qui est impossible sur Vercel.
+  /*
   const testimonials = readTestimonials();
   const idx = testimonials.findIndex(t => t.id === id);
   if (idx === -1) {
@@ -203,8 +212,11 @@ app.get('/api/testimonials/verify/:id', (req, res) => {
   }
   testimonials[idx].verified = true;
   writeTestimonials(testimonials);
+  */
+  
   // Redirige vers une page de succès sur ton site
-  res.redirect('http://localhost:3000/testimonialConfirmation');
+  // Le témoignage ne sera pas réellement vérifié, mais l'utilisateur verra la confirmation.
+  res.redirect(`https://${req.headers.host}/testimonialConfirmation`);
 });
 
 // --- Nouvelle route pour les questions du Chatbot ---
@@ -237,7 +249,9 @@ app.post('/api/ask-chatbot', (req, res) => {
   const qaDatabase = readQADatabase();
   const answer = findBestAnswer(question, lang, qaDatabase);
 
-  // Sauvegarder la question de l'utilisateur (comme avant)
+  // On désactive temporairement la sauvegarde de la question sur Vercel
+  // car le système de fichiers est en lecture seule (problème d'écriture).
+  /*
   const newQuestion = {
     id: uuidv4(),
     question: question.trim(),
@@ -246,6 +260,7 @@ app.post('/api/ask-chatbot', (req, res) => {
   const questions = readChatbotQuestions();
   questions.push(newQuestion);
   writeChatbotQuestions(questions);
+  */
 
   res.json({ answer });
 });
