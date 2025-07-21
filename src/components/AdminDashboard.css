@@ -1,0 +1,165 @@
+/* === Thème Sombre Premium pour l'Admin Dashboard === */
+
+.admin-dashboard {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: var(--secondary-bg, #23283a);
+  color: var(--text-main, #f5f6fa);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.admin-dashboard h1 {
+  text-align: center;
+  color: var(--gold, #ffd700);
+  margin-bottom: 30px;
+  font-size: 2.2rem;
+  letter-spacing: 1px;
+}
+
+.dashboard-section {
+  background: var(--glass-bg, rgba(36, 41, 61, 0.7));
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.18));
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-section h2 {
+  font-size: 1.6rem;
+  color: var(--accent, #1e90ff);
+  border-bottom: 2px solid var(--accent, #1e90ff);
+  padding-bottom: 10px;
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.dashboard-section p {
+  color: var(--text-secondary, #b2becd);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Formulaire */
+.qa-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--gold, #ffd700);
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 12px;
+  background-color: var(--primary-bg, #181c24);
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.18));
+  border-radius: 8px;
+  font-size: 1rem;
+  color: var(--text-main, #f5f6fa);
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent, #1e90ff);
+  box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.3);
+}
+
+.submit-btn {
+  background-color: var(--accent, #1e90ff);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  align-self: flex-start;
+  box-shadow: 0 4px 15px rgba(30, 144, 255, 0.2);
+}
+
+.submit-btn:hover {
+  background-color: var(--gold, #ffd700);
+  color: var(--primary-bg, #181c24);
+  transform: translateY(-2px);
+}
+
+/* Liste des questions */
+.questions-list {
+  list-style-type: none;
+  padding: 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.questions-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: var(--primary-bg, #181c24);
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.18));
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.questions-list li:hover {
+  border-color: var(--accent, #1e90ff);
+  transform: translateX(5px);
+  background-color: var(--secondary-bg, #23283a);
+}
+
+.question-text {
+  font-weight: 500;
+  color: var(--text-main, #f5f6fa);
+}
+
+.question-date {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #b2becd);
+}
+
+/* Messages de statut */
+.message {
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.message.success {
+  background-color: rgba(46, 204, 113, 0.1);
+  color: #2ecc71;
+  border-color: #2ecc71;
+}
+
+.message.error {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border-color: #e74c3c;
+} 

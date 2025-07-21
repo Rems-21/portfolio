@@ -1,0 +1,82 @@
+/* === Thème Sombre Premium pour la page de Connexion === */
+
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: var(--primary-bg, #181c24);
+  color: var(--text-main, #f5f6fa);
+}
+
+.login-container {
+  background: var(--secondary-bg, #23283a);
+  padding: 40px;
+  border-radius: 18px;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.18));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.login-container h1 {
+  font-size: 2rem;
+  color: var(--gold, #ffd700);
+  margin-bottom: 15px;
+}
+
+.login-container p {
+  color: var(--text-secondary, #b2becd);
+  margin-bottom: 30px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-input {
+  padding: 14px;
+  background-color: var(--primary-bg, #181c24);
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.18));
+  border-radius: 8px;
+  font-size: 1rem;
+  color: var(--text-main, #f5f6fa);
+  transition: all 0.2s ease;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: var(--accent, #1e90ff);
+  box-shadow: 0 0 0 3px rgba(30, 144, 255, 0.3);
+}
+
+.login-button {
+  background-color: var(--accent, #1e90ff);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  box-shadow: 0 4px 15px rgba(30, 144, 255, 0.2);
+}
+
+.login-button:hover {
+  background-color: var(--gold, #ffd700);
+  color: var(--primary-bg, #181c24);
+  transform: translateY(-2px);
+}
+
+.login-error {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+} 
