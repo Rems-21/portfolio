@@ -55,7 +55,11 @@ const RemsBot = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chatbot-qa');
+      const response = await fetch('/api/ask-chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: userMessage, lang })
+      });
       const data = await response.json();
       
       const botResponse = data.answer;
