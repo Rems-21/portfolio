@@ -130,10 +130,10 @@ const Testimonials = () => {
           rating: 5,
           agreeToVerification: false
         });
-        setSuccess(lang === 'fr' 
+          setSuccess(lang === 'fr' 
           ? 'Témoignage soumis ! Un email de vérification vous a été envoyé. Vérifiez vos spams.'
           : 'Testimonial submitted! A verification email has been sent to you. Check your spam folder.'
-        );
+          );
       } else {
         setError(result.message || (lang === 'fr' ? 'Une erreur est survenue.' : 'An error occurred.'));
       }
@@ -246,7 +246,7 @@ const Testimonials = () => {
           {success && <div className="testimonial-success">{success}</div>}
           {error && <div className="testimonial-error">{error}</div>}
           <form className="testimonial-form" onSubmit={handleSubmit}>
-             <div className="form-row">
+            <div className="form-row">
               <input
                 type="text"
                 name="name"

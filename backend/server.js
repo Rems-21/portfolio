@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const fs = require('fs');
+const path = require('path'); // Ajout du module path
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios'); // Ajout d'axios
 const bcrypt = require('bcrypt');
@@ -11,9 +12,10 @@ const { findBestAnswer } = require('./chatbot-logic'); // Importe le cerveau du 
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-const TESTIMONIALS_FILE = './testimonials.json';
-const CHATBOT_QUESTIONS_FILE = './chatbot-questions.json'; // Nouveau fichier
-const QA_DATABASE_FILE = './qa-database.json'; // Nouvelle base de données
+// Utilisation de path.join pour des chemins robustes
+const TESTIMONIALS_FILE = path.join(__dirname, 'testimonials.json');
+const CHATBOT_QUESTIONS_FILE = path.join(__dirname, 'chatbot-questions.json'); // Nouveau fichier
+const QA_DATABASE_FILE = path.join(__dirname, 'qa-database.json'); // Nouvelle base de données
 
 // Configuration EmailJS depuis .env
 const { EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, EMAILJS_USER_ID, EMAILJS_PRIVATE_KEY } = process.env;

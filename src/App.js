@@ -19,19 +19,19 @@ function App() {
   return (
     <Router>
       <Suspense fallback={<div className="loading-spinner">Chargement...</div>}>
-        <Routes>
+      <Routes>
           <Route path="/" element={<MainLayout />} />
           <Route path="/testimonialConfirmation" element={<TestimonialConfirmation />} />
           <Route path="/login" element={<AdminLogin />} />
-          <Route 
+        <Route
             path="/admin" 
-            element={
+          element={
               <PrivateRoute>
                 <AdminDashboard />
               </PrivateRoute>
-            } 
-          />
-        </Routes>
+          }
+        />
+      </Routes>
       </Suspense>
     </Router>
   );
