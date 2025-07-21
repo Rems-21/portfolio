@@ -142,7 +142,7 @@ app.post('/api/testimonials', async (req, res) => {
     await kv.set('testimonials', testimonials);
 
     // --- Logique d'envoi d'email ---
-    const verificationLink = `https://${process.env.VERCEL_URL}/verify-testimonial/${newTestimonial.id}`;
+    const verificationLink = `https://${process.env.VERCEL_URL}/api/testimonials/verify/${newTestimonial.id}`;
     
     const emailData = {
       service_id: process.env.EMAILJS_SERVICE_ID,

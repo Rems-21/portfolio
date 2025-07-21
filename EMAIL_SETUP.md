@@ -42,7 +42,7 @@
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
     <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #1e90ff;">Vérification de témoignage - DSONKOUAT Remus</h2>
+        <h2 style="color: #1e90ff;">Vérification de témoignage - xxxx</h2>
         
         <p>Bonjour {{name}},</p>
         
@@ -77,7 +77,7 @@
         
         <p style="font-size: 14px; color: #666;">
             Cordialement,<br>
-            Portfolio DSONKOUAT Remus Herlandes
+            Portfolio D.Remus
         </p>
     </div>
 </body>
@@ -99,7 +99,7 @@ export const emailConfig = {
   serviceId: 'service_kjwjyqw',        // <-- VOTRE NOUVEAU SERVICE ID
   templateId: 'VOTRE_TEMPLATE_ID',     // à compléter
   publicKey: 'VOTRE_PUBLIC_KEY',       // à compléter
-  adminEmail: 'dsonkouatremus@gmail.com',
+  adminEmail: 'xxxx@@gmail.com',
   baseUrl: window.location.origin + window.location.pathname
 };
 ```

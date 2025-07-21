@@ -24,6 +24,11 @@ const Testimonials = () => {
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeReactionPicker, setActiveReactionPicker] = useState(null);
+  // Notification visible et traduite
+  const [showSuccess, setShowSuccess] = useState(false);
+  useEffect(() => {
+    if (success) setShowSuccess(true);
+  }, [success]);
 
   // Charger les témoignages vérifiés depuis le backend au montage
   useEffect(() => {
@@ -243,7 +248,12 @@ const Testimonials = () => {
               : 'To ensure testimonial authenticity, we send a verification email for each submission.'
             }</p>
           </div>
-          {success && <div className="testimonial-success">{success}</div>}
+          {showSuccess && (
+            <div className="testimonial-success-notification">
+              <span>{success}</span>
+              <button className="close-notification" onClick={() => setShowSuccess(false)} aria-label={lang === 'fr' ? 'Fermer la notification' : 'Close notification'}>×</button>
+            </div>
+          )}
           {error && <div className="testimonial-error">{error}</div>}
           <form className="testimonial-form" onSubmit={handleSubmit}>
             <div className="form-row">
