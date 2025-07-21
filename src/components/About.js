@@ -28,7 +28,7 @@ const About = () => {
                 <span className="code-keyword">let</span> Me <span className="code-operator">=</span> <span className="code-brace">&#123;</span>{"\n"}
                 <span className="code-property">nom</span><span className="code-operator">:</span> <span className="code-string">"D.Remus"</span>,{"\n"}
                 <span className="code-property">statut</span><span className="code-operator">:</span> <span className="code-string">"Étudiant en 2ème année informatique industrielle & freelance web"</span>,{"\n"}
-                <span className="code-property">skills</span><span className="code-operator">:</span> [<span className="code-string">"Django"</span>, <span className="code-string">"c/c++/python/crafcet"</span>, <span className="code-string">"HTML/CSS/js/php"</span>, <span className="code-string">"Gestion projet"</span>],{"\n"}
+                <span className="code-property">skills</span><span className="code-operator">:</span> [<span className="code-string">"Django"</span>, <span className="code-string">"c/c++/python/grafcet"</span>, <span className="code-string">"HTML/CSS/js/php"</span>, <span className="code-string">"Gestion projet"</span>],{"\n"}
                 <span className="code-property">devise</span><span className="code-operator">:</span> <span className="code-string">"Créer, optimiser, sécuriser."</span>{"\n"}
                 <span className="code-brace">&#125;;</span>
               </pre>

@@ -106,6 +106,126 @@ app.get('/api/chatbot-questions', authenticateToken, async (req, res) => {
   }
 });
 
+// --- GESTION AVANCÉE DES TÉMOIGNAGES (ADMIN) ---
+
+// Récupérer tous les témoignages (protégé)
+app.get('/api/admin/testimonials', authenticateToken, async (req, res) => {
+  try {
+    const testimonials = await kv.get('testimonials') || [];
+    res.json(testimonials);
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+});
+
+// Valider ou refuser un témoignage (protégé)
+app.put('/api/admin/testimonials/:id/validate', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body; // status: 'validated' | 'refused' | 'pending'
+  try {
+    const testimonials = await kv.get('testimonials') || [];
+    const idx = testimonials.findIndex(t => t.id === id);
+    if (idx === -1) return res.status(404).json({ success: false, message: 'Témoignage introuvable.' });
+    if (status === 'validated') testimonials[idx].verified = true;
+    else if (status === 'refused') testimonials[idx].verified = false;
+    testimonials[idx].status = status;
+    await kv.set('testimonials', testimonials);
+    res.json({ success: true, message: 'Statut du témoignage mis à jour.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+});
+
+// Supprimer un témoignage (protégé)
+app.delete('/api/admin/testimonials/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    let testimonials = await kv.get('testimonials') || [];
+    const idx = testimonials.findIndex(t => t.id === id);
+    if (idx === -1) return res.status(404).json({ success: false, message: 'Témoignage introuvable.' });
+    testimonials.splice(idx, 1);
+    await kv.set('testimonials', testimonials);
+    res.json({ success: true, message: 'Témoignage supprimé.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+});
+
+// Statistiques sur les témoignages (protégé)
+app.get('/api/admin/testimonials/stats', authenticateToken, async (req, res) => {
+  try {
+    const testimonials = await kv.get('testimonials') || [];
+    const total = testimonials.length;
+    const validated = testimonials.filter(t => t.verified).length;
+    const refused = testimonials.filter(t => t.status === 'refused').length;
+    const pending = testimonials.filter(t => !t.verified && t.status !== 'refused').length;
+    // Stats par mois
+    const byMonth = {};
+    testimonials.forEach(t => {
+      const month = t.date ? t.date.slice(0,7) : 'unknown';
+      byMonth[month] = (byMonth[month] || 0) + 1;
+    });
+    res.json({ total, validated, refused, pending, byMonth });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+});
+
+// --- GESTION AVANCÉE DU CHATBOT (ADMIN) ---
+
+// Récupérer toutes les Q&A (protégé)
+app.get('/api/admin/chatbot-qa', authenticateToken, async (req, res) => {
+  try {
+    const qaData = await kv.get('qa_database') || [];
+    res.json(qaData);
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+});
+
+// Modifier une Q&A (protégé)
+app.put('/api/admin/chatbot-qa/:index', authenticateToken, async (req, res) => {
+  const { index } = req.params;
+  const { keywords, answer } = req.body;
+  try {
+    const qaData = await kv.get('qa_database') || [];
+    if (!qaData[index]) return res.status(404).json({ success: false, message: 'Q&A introuvable.' });
+    qaData[index] = { keywords, answer };
+    await kv.set('qa_database', qaData);
+    res.json({ success: true, message: 'Q&A modifiée.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+});
+
+// Supprimer une Q&A (protégé)
+app.delete('/api/admin/chatbot-qa/:index', authenticateToken, async (req, res) => {
+  const { index } = req.params;
+  try {
+    const qaData = await kv.get('qa_database') || [];
+    if (!qaData[index]) return res.status(404).json({ success: false, message: 'Q&A introuvable.' });
+    qaData.splice(index, 1);
+    await kv.set('qa_database', qaData);
+    res.json({ success: true, message: 'Q&A supprimée.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+});
+
+// Statistiques d'utilisation du chatbot (protégé)
+app.get('/api/admin/chatbot/stats', authenticateToken, async (req, res) => {
+  try {
+    const questions = await kv.get('chatbot_questions') || [];
+    const total = questions.length;
+    // Taux de suggestions (non compris)
+    // On suppose que findBestAnswer renvoie un objet {type: 'suggestions', ...} si non compris
+    // Ici, on ne stocke pas la réponse, donc on ne peut pas calculer le taux exact sans adaptation
+    res.json({ total });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+  }
+});
+
 // Route de test
 app.get('/', (req, res) => {
   res.send('Backend for portfolio is running!');
@@ -131,13 +251,18 @@ app.post('/api/testimonials', async (req, res) => {
     return res.status(400).json({ error: 'Nom, message et email sont obligatoires.' });
   }
 
+  // Vérification anti-doublon côté backend
+  const testimonials = await kv.get('testimonials') || [];
+  if (testimonials.some(t => t.email && t.email.toLowerCase() === email.toLowerCase())) {
+    return res.status(400).json({ error: 'Un témoignage avec cet email existe déjà.' });
+  }
+
   const newTestimonial = {
     id: uuidv4(), name, position, company, rating, message, email,
     verified: false, date: new Date().toISOString()
   };
 
   try {
-    const testimonials = await kv.get('testimonials') || [];
     testimonials.push(newTestimonial);
     await kv.set('testimonials', testimonials);
 

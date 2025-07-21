@@ -1,200 +1,169 @@
-# Portfolio Bilingue - Développeur Web & Informaticien Industriel
+# Portfolio Bilingue – Fullstack React/Node.js
 
-Un portfolio professionnel moderne et responsive, développé en React avec support multilingue (français/anglais).
+[![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://vercel.com/) [![Licence: MIT](https://img.shields.io/badge/Licence-MIT-blue.svg)](LICENSE)
 
-## 🚀 Fonctionnalités
-
-- **Design sobre et professionnel** adapté à l'industrie
-- **Support multilingue** (français/anglais) avec détection automatique
-- **Responsive design** pour tous les appareils
-- **Sections complètes** : Accueil, À propos, Projets, Contact
-- **Projets fictifs** adaptés à l'informatique industrielle
-- **Navigation fluide** avec défilement automatique
-- **Animations et transitions** modernes
-
-## 📋 Prérequis
-
-- Node.js (version 14 ou supérieure)
-- npm ou yarn
-
-## 🛠️ Installation
-
-1. **Cloner ou télécharger le projet**
-   ```bash
-   # Si vous avez git
-   git clone [URL_DU_REPO]
-   cd portfolio-bilingue
-   
-   # Ou simplement naviguer dans le dossier
-   cd portfolio-bilingue
-   ```
-
-2. **Installer les dépendances**
-   ```bash
-   npm install
-   ```
-
-3. **Lancer le serveur de développement**
-   ```bash
-   npm start
-   ```
-
-4. **Ouvrir dans le navigateur**
-   - Le site s'ouvre automatiquement sur `http://localhost:3000`
-   - Si ce n'est pas le cas, ouvrez manuellement cette URL
-
-## 🎨 Personnalisation
-
-### Informations personnelles
-
-1. **Modifier les traductions** dans `src/i18n.js`
-2. **Remplacer les projets fictifs** dans `src/components/Projects.js`
-3. **Mettre à jour les contacts** dans `src/components/Contact.js`
-
-### Design
-
-- **Couleurs** : Modifiez les variables CSS dans `src/App.css` (section `:root`)
-- **Police** : Changez `font-family` dans `body`
-- **Images** : Remplacez les emojis par vos propres images
-
-### Exemple de personnalisation des contacts
-
-```javascript
-// Dans src/components/Contact.js
-const contactInfo = [
-  {
-    type: 'email',
-    label: t('contact.email'),
-    value: 'votre-email@example.com', // ← Votre email
-    icon: '📧',
-    link: 'mailto:votre-email@example.com'
-  },
-  {
-    type: 'linkedin',
-    label: t('contact.linkedin'),
-    value: 'linkedin.com/in/votre-profil', // ← Votre profil LinkedIn
-    icon: '💼',
-    link: 'https://linkedin.com/in/votre-profil'
-  },
-  // Ajoutez d'autres contacts...
-];
-```
-
-## 🌐 Hébergement
-
-### Option 1 : Vercel (Recommandé)
-
-1. **Créer un compte** sur [vercel.com](https://vercel.com)
-2. **Installer Vercel CLI**
-   ```bash
-   npm install -g vercel
-   ```
-3. **Déployer**
-   ```bash
-   vercel
-   ```
-4. **Suivre les instructions** pour connecter votre projet
-
-### Option 2 : Netlify
-
-1. **Créer un compte** sur [netlify.com](https://netlify.com)
-2. **Glisser-déposer** le dossier `build` après `npm run build`
-3. **Ou connecter** votre repository GitHub
-
-### Option 3 : GitHub Pages
-
-1. **Créer un repository** sur GitHub
-2. **Pousser votre code**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin [URL_DU_REPO]
-   git push -u origin main
-   ```
-3. **Activer GitHub Pages** dans les paramètres du repository
-4. **Configurer** la source sur la branche `main` et le dossier `/docs`
-
-### Option 4 : Firebase Hosting
-
-1. **Installer Firebase CLI**
-   ```bash
-   npm install -g firebase-tools
-   ```
-2. **Initialiser Firebase**
-   ```bash
-   firebase login
-   firebase init hosting
-   ```
-3. **Configurer** le dossier public sur `build`
-4. **Déployer**
-   ```bash
-   npm run build
-   firebase deploy
-   ```
-
-## 📦 Scripts disponibles
-
-```bash
-npm start          # Lance le serveur de développement
-npm run build      # Crée une version de production
-npm test           # Lance les tests
-npm run eject      # Éjecte la configuration (irréversible)
-```
-
-## 🎯 Structure du projet
-
-```
-portfolio-bilingue/
-├── public/                 # Fichiers publics
-├── src/
-│   ├── components/         # Composants React
-│   │   ├── Navigation.js
-│   │   ├── Hero.js
-│   │   ├── About.js
-│   │   ├── Projects.js
-│   │   ├── Contact.js
-│   │   └── Footer.js
-│   ├── i18n.js            # Configuration multilingue
-│   ├── App.js             # Composant principal
-│   ├── App.css            # Styles principaux
-│   └── index.js           # Point d'entrée
-├── package.json           # Dépendances et scripts
-└── README.md             # Ce fichier
-```
-
-## 🔧 Technologies utilisées
-
-- **React** - Framework JavaScript
-- **react-i18next** - Gestion multilingue
-- **CSS3** - Styles et animations
-- **HTML5** - Structure sémantique
-
-## 📱 Responsive Design
-
-Le portfolio s'adapte automatiquement à :
-- **Desktop** (1200px+)
-- **Tablet** (768px - 1199px)
-- **Mobile** (< 768px)
-
-## 🚀 Optimisations
-
-- **Performance** : Code optimisé et images compressées
-- **SEO** : Métadonnées et structure sémantique
-- **Accessibilité** : Navigation clavier et lecteurs d'écran
-- **Sécurité** : Liens externes sécurisés
-
-## 📞 Support
-
-Pour toute question ou problème :
-1. Vérifiez la console du navigateur pour les erreurs
-2. Assurez-vous que toutes les dépendances sont installées
-3. Redémarrez le serveur de développement
-
-## 📄 Licence
-
-Ce projet est sous licence MIT. Vous êtes libre de l'utiliser et de le modifier selon vos besoins.
+Un portfolio professionnel, moderne et sécurisé, développé en **React** (frontend) et **Node.js/Express** (backend), avec stockage cloud (Upstash KV), admin protégé, gestion avancée des témoignages, chatbot IA, et support multilingue (français/anglais).
 
 ---
 
-**Bon développement ! 🎉**
+## 🗂️ Sommaire
+- [Fonctionnalités](#fonctionnalités)
+- [Démo](#démo)
+- [Prérequis](#prérequis)
+- [Installation & Lancement](#installation--lancement)
+- [Configuration (environnements)](#configuration-environnements)
+- [Structure du projet](#structure-du-projet)
+- [Admin sécurisé](#admin-sécurisé)
+- [Chatbot IA](#chatbot-ia)
+- [Déploiement Vercel](#déploiement-vercel)
+- [Technos](#technos)
+- [Support](#support)
+- [Licence](#licence)
+
+---
+
+## 🚀 Fonctionnalités
+- **Frontend React** moderne, responsive, multilingue (fr/en)
+- **Backend Node.js/Express** (API REST, stockage cloud Upstash KV)
+- **Admin sécurisé** (login JWT, dashboard, gestion avancée)
+- **Gestion des témoignages** (validation, refus, suppression, stats, pagination)
+- **Chatbot IA** (Q&A, suggestions, apprentissage admin, stats)
+- **Notifications visuelles, pagination, filtres, recherche**
+- **SEO optimisé, accessibilité, performance**
+
+---
+
+## 🎬 Démo
+- [Démo en ligne (Vercel)](https://portfolio-xxxxxx.vercel.app)
+
+---
+
+## 📋 Prérequis
+- Node.js 16+
+- npm ou yarn
+- Un compte [Vercel](https://vercel.com/) (pour le déploiement cloud)
+
+---
+
+## 🛠️ Installation & Lancement
+
+1. **Cloner le projet**
+   ```bash
+   git clone https://github.com/ton-utilisateur/portfolio-bilingue.git
+   cd portfolio-bilingue
+   ```
+2. **Installer les dépendances frontend & backend**
+   ```bash
+   cd portfolio-bilingue
+   npm install
+   cd backend
+   npm install
+   ```
+3. **Configurer les variables d’environnement** (voir section ci-dessous)
+4. **Lancer en local**
+   - Frontend :
+     ```bash
+     cd portfolio-bilingue
+     npm start
+     ```
+   - Backend :
+     ```bash
+     cd backend
+     npm run dev
+     ```
+
+---
+
+## ⚙️ Configuration (environnements)
+
+Créer un fichier `.env` dans `backend/` avec :
+```
+PORT=8080
+EMAILJS_SERVICE_ID=xxx
+EMAILJS_TEMPLATE_ID=xxx
+EMAILJS_USER_ID=xxx
+EMAILJS_PRIVATE_KEY=xxx
+ADMIN_PASSWORD=tonmotdepasseadmin
+JWT_SECRET=unePhraseSecrèteUltraLongue
+# Upstash KV (ajouté automatiquement par Vercel/Upstash)
+KV_REST_API_URL=...
+KV_REST_API_TOKEN=...
+```
+- Les variables Upstash KV sont créées automatiquement lors de l’intégration sur Vercel.
+- Les variables EmailJS sont à récupérer sur [emailjs.com](https://dashboard.emailjs.com/).
+
+---
+
+## 🏗️ Structure du projet
+
+```
+portfolio-bilingue/
+├── backend/                # Backend Node.js/Express (API, stockage KV)
+│   ├── server.js
+│   ├── chatbot-logic.js
+│   ├── .env
+│   └── ...
+├── public/                 # Fichiers publics (favicon, images, manifest)
+├── src/
+│   ├── components/         # Composants React (UI, admin, chatbot...)
+│   ├── i18n.js             # Internationalisation
+│   ├── App.js, App.css     # Entrée principale
+│   └── ...
+├── vercel.json             # Configuration déploiement Vercel
+├── README.md
+└── ...
+```
+
+---
+
+## 🔐 Admin sécurisé
+- **Accès** : `/admin` (login requis)
+- **Protection JWT** : token stocké côté client, vérifié à chaque requête
+- **Fonctionnalités** :
+  - Voir, valider, refuser, supprimer les témoignages
+  - Pagination, recherche, filtres, stats
+  - Gérer la base de connaissances du chatbot (Q&A)
+  - Voir les questions utilisateurs, ajouter une Q&A à partir d’une question
+  - Statistiques avancées
+- **Sécurité** : expiration du token, déconnexion auto, confirmation avant suppression
+
+---
+
+## 🤖 Chatbot IA
+- **Base de connaissances Q&A** (éditable en admin)
+- **Suggestions intelligentes** (levenshtein, synonymes, stopwords)
+- **Apprentissage admin** : ajouter une Q&A à partir d’une question utilisateur
+- **Statistiques d’utilisation**
+
+---
+
+## 🚀 Déploiement Vercel
+- **Déploiement fullstack** (frontend + backend) via [Vercel](https://vercel.com/)
+- **Stockage cloud Upstash KV** (scalable, rapide, sans maintenance)
+- **Configuration automatique des variables d’environnement**
+- **URL gratuite en `.vercel.app` ou domaine personnalisé**
+
+---
+
+## 🛠️ Technos
+- **React** (frontend)
+- **Node.js/Express** (backend)
+- **Upstash KV** (stockage cloud)
+- **EmailJS** (envoi d’emails)
+- **JWT** (authentification admin)
+- **CSS3** (UI/UX moderne, responsive)
+
+---
+
+## 📞 Support
+- Ouvrez une issue sur GitHub pour toute question ou bug
+- Contact : [votre-email@example.com]
+
+---
+
+## 📄 Licence
+MIT – Utilisation et modification libres, même pour usage pro.
+
+---
+
+**Bon développement et bonne découverte du projet ! 🚀**
