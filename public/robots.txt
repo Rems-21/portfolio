@@ -1,4 +1,3 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Allow: /
-Sitemap: https://portfolio-tan-ten-51.vercel.app/sitemap.xml
+Disallow:

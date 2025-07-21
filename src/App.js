@@ -3,7 +3,6 @@ import './App.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import TestimonialConfirmation from './components/TestimonialConfirmation';
 import './i18n';
-import { HelmetProvider } from 'react-helmet-async';
 
 // Composant de Route Protégée
 const PrivateRoute = ({ children }) => {
@@ -18,25 +17,23 @@ const AdminLogin = lazy(() => import('./components/AdminLogin'));
 
 function App() {
   return (
-    <HelmetProvider>
-      <Router>
-        <Suspense fallback={<div className="loading-spinner">Chargement...</div>}>
-        <Routes>
-            <Route path="/" element={<MainLayout />} />
-            <Route path="/testimonialConfirmation" element={<TestimonialConfirmation />} />
-            <Route path="/login" element={<AdminLogin />} />
-          <Route
-              path="/admin" 
-            element={
-                <PrivateRoute>
-                  <AdminDashboard />
-                </PrivateRoute>
-            }
-          />
-        </Routes>
-        </Suspense>
-      </Router>
-    </HelmetProvider>
+    <Router>
+      <Suspense fallback={<div className="loading-spinner">Chargement...</div>}>
+      <Routes>
+          <Route path="/" element={<MainLayout />} />
+          <Route path="/testimonialConfirmation" element={<TestimonialConfirmation />} />
+          <Route path="/login" element={<AdminLogin />} />
+        <Route
+            path="/admin" 
+          element={
+              <PrivateRoute>
+                <AdminDashboard />
+              </PrivateRoute>
+          }
+        />
+      </Routes>
+      </Suspense>
+    </Router>
   );
 }
 
