@@ -33,11 +33,6 @@ Un portfolio professionnel, moderne et sécurisé, développé en **React** (fro
 
 ---
 
-## 🎬 Démo
-- [Démo en ligne (Vercel)](https://portfolio-xxxxxx.vercel.app)
-
----
-
 ## 📋 Prérequis
 - Node.js 16+
 - npm ou yarn
