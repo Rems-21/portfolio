@@ -2,9 +2,9 @@
   "version": 2,
   "builds": [
     {
-      "src": "portfolio-bilingue/package.json",
+      "src": "package.json",
       "use": "@vercel/static-build",
-      "config": { "distDir": "portfolio-bilingue/build" }
+      "config": { "distDir": "build" }
     },
     {
       "src": "backend/server.js",
@@ -18,7 +18,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/portfolio-bilingue/index.html"
+      "destination": "/index.html"
     }
   ]
 } 
