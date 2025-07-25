@@ -28,6 +28,11 @@ const Testimonials = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [reactionError, setReactionError] = useState('');
   const [userId, setUserId] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 3500);
+  };
   useEffect(() => {
     let storedId = localStorage.getItem('userId');
     if (!storedId) {
@@ -185,11 +190,14 @@ const Testimonials = () => {
         setTestimonials(prev => prev.map(t =>
           t.id === testimonialId ? { ...t, reactions: data.reactions } : t
         ));
+        showToast(lang === 'fr' ? 'Réaction ajoutée !' : 'Reaction added!', 'success');
       } else {
         setReactionError(data.message || (lang === 'fr' ? 'Erreur lors de la réaction.' : 'Reaction error.'));
+        showToast(data.message || (lang === 'fr' ? 'Erreur lors de la réaction.' : 'Reaction error.'), 'error');
       }
     } catch (err) {
       setReactionError(lang === 'fr' ? 'Erreur de connexion.' : 'Connection error.');
+      showToast(lang === 'fr' ? 'Erreur de connexion.' : 'Connection error.', 'error');
     }
     setActiveReactionPicker(null);
   };
@@ -202,6 +210,16 @@ const Testimonials = () => {
   const totalTestimonialPages = Math.ceil(sortedTestimonials.length / testimonialsPerPage);
   const paginatedTestimonials = sortedTestimonials.slice((testimonialPage-1)*testimonialsPerPage, testimonialPage*testimonialsPerPage);
 
+  // Pagination : animation fade
+  const [pageAnim, setPageAnim] = useState(false);
+  const handlePageChange = (newPage) => {
+    setPageAnim(true);
+    setTimeout(() => {
+      setTestimonialPage(newPage);
+      setPageAnim(false);
+    }, 200);
+  };
+
   return (
     <>
       {/* Notification mobile-style en haut de l'écran */}
@@ -211,11 +229,16 @@ const Testimonials = () => {
           <button className="close-notification" onClick={() => setShowSuccess(false)} aria-label={lang === 'fr' ? 'Fermer la notification' : 'Close notification'}>×</button>
         </div>
       )}
+      {toast.show && (
+        <div className={`toast-notification toast-${toast.type}`} style={{position:'fixed',top:24,right:24,zIndex:9999,minWidth:220,padding:'14px 24px',borderRadius:8,background:toast.type==='success'?'#d1fae5':toast.type==='error'?'#fee2e2':'#e0e7ff',color:'#223',boxShadow:'0 4px 24px #0002',fontWeight:600,transition:'opacity 0.3s',opacity:toast.show?1:0}}>
+          {toast.message}
+        </div>
+      )}
       <section id="testimonials" className="testimonials">
         <div className="container">
           <h2 className="section-title">{lang === 'fr' ? 'Témoignages Clients' : 'Client Testimonials'}</h2>
           
-          <div className="testimonials-grid">
+          <div className="testimonials-grid" style={{opacity: pageAnim ? 0.3 : 1, transition: 'opacity 0.2s'}}>
             {paginatedTestimonials.length > 0 ? (
               paginatedTestimonials.map(testimonial => (
                 <div key={testimonial.id} className="testimonial-card">
@@ -283,23 +306,13 @@ const Testimonials = () => {
           {/* Remplacer testimonials.map(...) par paginatedTestimonials.map(...) */}
           {/* Ajouter la pagination sous la liste : boutons Précédent/Suivant et indication de page */}
           {totalTestimonialPages > 1 && (
-            <div className="pagination-container">
-              <button 
-                onClick={() => setTestimonialPage(prev => Math.max(1, prev - 1))} 
-                disabled={testimonialPage === 1}
-                className="pagination-button"
-              >
-                {lang === 'fr' ? 'Précédent' : 'Previous'}
+            <div className="pagination-container" style={{display:'flex',justifyContent:'center',alignItems:'center',gap:12,margin:'24px 0'}}>
+              <button onClick={() => handlePageChange(testimonialPage-1)} disabled={testimonialPage===1} style={{width:40,height:40,borderRadius:'50%',border:'none',background:'#e0e7ff',color:'#007bff',fontWeight:700,fontSize:18,cursor:'pointer',boxShadow:'0 2px 8px #007bff22',transition:'background 0.2s',outline:'none'}}>
+                ‹
               </button>
-              <span className="pagination-info">
-                {testimonialPage} / {totalTestimonialPages}
-              </span>
-              <button 
-                onClick={() => setTestimonialPage(prev => Math.min(totalTestimonialPages, prev + 1))} 
-                disabled={testimonialPage === totalTestimonialPages}
-                className="pagination-button"
-              >
-                {lang === 'fr' ? 'Suivant' : 'Next'}
+              <span style={{fontSize:18,fontWeight:600,color:'#007bff'}}>{testimonialPage} / {totalTestimonialPages}</span>
+              <button onClick={() => handlePageChange(testimonialPage+1)} disabled={testimonialPage===totalTestimonialPages} style={{width:40,height:40,borderRadius:'50%',border:'none',background:'#e0e7ff',color:'#007bff',fontWeight:700,fontSize:18,cursor:'pointer',boxShadow:'0 2px 8px #007bff22',transition:'background 0.2s',outline:'none'}}>
+                ›
               </button>
             </div>
           )}
