@@ -300,7 +300,7 @@ R : Le taux de satisfaction client de Remus est supérieur à 95 %.
     const response = await axios.post(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
       {
-        contents: [{ parts: [{ text: question }] }]
+        contents: [{ parts: [{ text: chatbotPrompt + "\nQ: " + question }] }]
       }
     );
     const answer = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "Je n'ai pas compris.";
