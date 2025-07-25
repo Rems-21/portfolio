@@ -33,54 +33,27 @@ const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('testimonials');
 
   // --- Gestion avancée des témoignages ---
-  useEffect(() => {
-    const fetchTestimonials = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch('/api/admin/testimonials', {
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-        if (res.status === 401 || res.status === 403) {
-          localStorage.removeItem('authToken');
-          window.location.href = '/login';
-          return;
-        }
-        const data = await res.json();
-        setTestimonials(data);
-      } catch (e) {
-        setNotif('Erreur lors du chargement des témoignages.');
-        setNotifType('error');
-      } finally {
-        setLoading(false);
+  // Déplacer fetchTestimonials en dehors du useEffect pour qu'elle soit accessible partout
+  const fetchTestimonials = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/testimonials', {
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+      });
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('authToken');
+        window.location.href = '/login';
+        return;
       }
-    };
-    const fetchStats = async () => {
-      try {
-        const res = await fetch('/api/admin/testimonials/stats', {
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-        if (res.ok) {
-          // setStats(await res.json()); // This line was removed as per the edit hint
-        }
-      } catch {}
-    };
-    // --- fetch Q&A ---
-    // Supprimer la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
-    // Supprimer la section/statistiques chatbot et le nombre de visiteurs
-    // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
-    // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
-    // --- fetch stats chatbot ---
-    // Supprimer la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
-    // Supprimer la section/statistiques chatbot et le nombre de visiteurs
-    // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
-    // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
-    fetchTestimonials();
-    fetchStats();
-    // Supprimer la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
-    // Supprimer la section/statistiques chatbot et le nombre de visiteurs
-    // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
-    // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
-  }, []);
+      const data = await res.json();
+      setTestimonials(data);
+    } catch (e) {
+      setNotif('Erreur lors du chargement des témoignages.');
+      setNotifType('error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAction = async (id, action) => {
     setNotif('');
