@@ -30,13 +30,6 @@ const Testimonials = () => {
   const [message, setMessage] = useState({ text: '', type: '' });
   const messageTimeout = useRef(null);
 
-  // Affichage de la bulle de notification
-  const showMessage = (text, type = 'info') => {
-    setMessage({ text, type });
-    if (messageTimeout.current) clearTimeout(messageTimeout.current);
-    messageTimeout.current = setTimeout(() => setMessage({ text: '', type: '' }), 3000);
-  };
-
   useEffect(() => {
     let storedId = localStorage.getItem('userId');
     if (!storedId) {
