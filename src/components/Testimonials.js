@@ -25,7 +25,6 @@ const Testimonials = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeReactionPicker, setActiveReactionPicker] = useState(null);
   // Notification visible et traduite
-  const [showSuccess, setShowSuccess] = useState(false);
   const [reactionError, setReactionError] = useState('');
   const [userId, setUserId] = useState('');
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -48,9 +47,8 @@ const Testimonials = () => {
   }, []);
   useEffect(() => {
     if (success) {
-      setShowSuccess(true);
       // Masquer automatiquement après 5 secondes
-      const timer = setTimeout(() => setShowSuccess(false), 5000);
+      const timer = setTimeout(() => setMessage({ text: '', type: '' }), 5000);
       return () => clearTimeout(timer);
     }
   }, [success]);
