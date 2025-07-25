@@ -20,7 +20,6 @@ const Testimonials = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Notification visible et traduite
-  const [userId, setUserId] = useState('');
   const [message, setMessage] = useState({ text: '', type: '' });
   const toastTimeout = useRef(null);
 
@@ -37,7 +36,6 @@ const Testimonials = () => {
       storedId = crypto.randomUUID();
       localStorage.setItem('userId', storedId);
     }
-    setUserId(storedId);
   }, []);
   useEffect(() => {
     if (message.text) {
