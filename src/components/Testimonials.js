@@ -28,7 +28,6 @@ const Testimonials = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [reactionError, setReactionError] = useState('');
   const [userId, setUserId] = useState('');
-  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
   const showToast = (message, type = 'info') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 3500);
