@@ -31,10 +31,10 @@ const Testimonials = () => {
   // Responsive : adapter le nombre de témoignages par page
   useEffect(() => {
     const updatePerPage = () => {
-      if (window.innerWidth < 600) setPerPage(1);
-      else if (window.innerWidth < 900) setPerPage(2);
-      else if (window.innerWidth < 1200) setPerPage(3);
-      else setPerPage(4);
+      if (window.innerWidth < 600) setPerPage(1); // téléphone
+      else if (window.innerWidth < 900) setPerPage(2); // tablette
+      else if (window.innerWidth < 1300) setPerPage(3); // laptop 14 pouces
+      else setPerPage(4); // grand écran
     };
     updatePerPage();
     window.addEventListener('resize', updatePerPage);
