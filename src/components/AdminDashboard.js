@@ -4,12 +4,6 @@ import './AdminDashboard.css';
 // Fonction pour récupérer le jeton d'authentification
 const getAuthToken = () => localStorage.getItem('authToken');
 
-const STATUS_LABELS = {
-  validated: 'Validé',
-  refused: 'Refusé',
-  pending: 'En attente',
-};
-
 const SIDEBAR_SECTIONS = [
   { key: 'stats', label: 'Statistiques', icon: '📊' },
   { key: 'testimonials', label: 'Témoignages', icon: '📝' },
@@ -52,56 +46,6 @@ const AdminDashboard = () => {
       setNotifType('error');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAction = async (id, action) => {
-    setNotif('');
-    if (action === 'delete') {
-      if (!window.confirm('Supprimer ce témoignage ?')) return;
-      try {
-        const res = await fetch(`/api/admin/testimonials/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-        const result = await res.json();
-        if (res.ok) {
-          setTestimonials(testimonials.filter(t => t.id !== id));
-          setNotif('Témoignage supprimé.');
-          setNotifType('success');
-        } else {
-          setNotif(result.message || 'Erreur lors de la suppression.');
-          setNotifType('error');
-        }
-      } catch {
-        setNotif('Erreur réseau.');
-        setNotifType('error');
-      }
-    } else {
-      // Valider ou refuser
-      const status = action === 'validate' ? 'validated' : 'refused';
-      try {
-        const res = await fetch(`/api/admin/testimonials/${id}/validate`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`
-          },
-          body: JSON.stringify({ status })
-        });
-        const result = await res.json();
-        if (res.ok) {
-          setTestimonials(testimonials.map(t => t.id === id ? { ...t, verified: status === 'validated', status } : t));
-          setNotif(status === 'validated' ? 'Témoignage validé.' : 'Témoignage refusé.');
-          setNotifType('success');
-        } else {
-          setNotif(result.message || 'Erreur lors de la mise à jour.');
-          setNotifType('error');
-        }
-      } catch {
-        setNotif('Erreur réseau.');
-        setNotifType('error');
-      }
     }
   };
 
@@ -189,14 +133,6 @@ const AdminDashboard = () => {
     await fetchTestimonials();
     setRefreshing(false);
   };
-  // 2. Suggestions IA
-  const iaSuggestions = [
-    "Quels sont les sujets les plus fréquents ?",
-    "Y a-t-il des tendances dans les questions ?",
-    "Quels sont les points à améliorer selon les utilisateurs ?",
-    "Quels services intéressent le plus ?",
-    "Y a-t-il des retours négatifs à traiter ?"
-  ];
   // 3. Scroll auto vers le résultat d'analyse IA
   const analyseResultRef = useRef(null);
   useEffect(() => {
