@@ -75,15 +75,6 @@ const AdminDashboard = () => {
         if (res.ok) setQaList(await res.json());
       } catch {}
     };
-    // --- fetch questions utilisateurs ---
-    const fetchQuestions = async () => {
-      try {
-        const res = await fetch('/api/chatbot-questions', {
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-        if (res.ok) setQuestions(await res.json());
-      } catch {}
-    };
     // --- fetch stats chatbot ---
     const fetchChatbotStats = async () => {
       try {
@@ -96,7 +87,6 @@ const AdminDashboard = () => {
     fetchTestimonials();
     fetchStats();
     fetchQa();
-    fetchQuestions();
     fetchChatbotStats();
   }, []);
 
