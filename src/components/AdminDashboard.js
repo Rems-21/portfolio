@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './AdminDashboard.css';
 
 // Fonction pour récupérer le jeton d'authentification
@@ -19,7 +19,6 @@ const SIDEBAR_SECTIONS = [
 
 const AdminDashboard = () => {
   const [testimonials, setTestimonials] = useState([]);
-  const [stats, setStats] = useState(null);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [notif, setNotif] = useState('');
@@ -61,7 +60,7 @@ const AdminDashboard = () => {
           headers: { 'Authorization': `Bearer ${getAuthToken()}` }
         });
         if (res.ok) {
-          setStats(await res.json());
+          // setStats(await res.json()); // This line was removed as per the edit hint
         }
       } catch {}
     };
@@ -210,6 +209,29 @@ const AdminDashboard = () => {
     }
   };
 
+  // 1. Nombre total de témoignages et bouton de rafraîchissement
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshTestimonials = async () => {
+    setRefreshing(true);
+    await fetchTestimonials();
+    setRefreshing(false);
+  };
+  // 2. Suggestions IA
+  const iaSuggestions = [
+    "Quels sont les sujets les plus fréquents ?",
+    "Y a-t-il des tendances dans les questions ?",
+    "Quels sont les points à améliorer selon les utilisateurs ?",
+    "Quels services intéressent le plus ?",
+    "Y a-t-il des retours négatifs à traiter ?"
+  ];
+  // 3. Scroll auto vers le résultat d'analyse IA
+  const analyseResultRef = useRef(null);
+  useEffect(() => {
+    if (analyseResult && analyseResultRef.current) {
+      analyseResultRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [analyseResult]);
+
   return (
     <div className="dashboard-root">
       <aside className="sidebar">
@@ -261,44 +283,72 @@ const AdminDashboard = () => {
                 </div>
                 {loading ? <p>Chargement...</p> : (
                   <>
-                  <table className="testimonials-table">
-                    <thead>
-                      <tr>
-                        <th>Nom</th>
-                        <th>Email</th>
-                        <th>Date</th>
-                        <th>Statut</th>
-                        <th>Message</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedTestimonials.length === 0 ? (
-                        <tr><td colSpan={6}>Aucun témoignage trouvé.</td></tr>
-                      ) : paginatedTestimonials.map(t => (
-                        <tr key={t.id} className={t.verified ? 'validated' : t.status === 'refused' ? 'refused' : 'pending'}>
-                          <td>{t.name}</td>
-                          <td>{t.email}</td>
-                          <td>{t.date ? new Date(t.date).toLocaleDateString() : ''}</td>
-                          <td>{t.verified ? STATUS_LABELS.validated : t.status === 'refused' ? STATUS_LABELS.refused : STATUS_LABELS.pending}</td>
-                          <td style={{maxWidth: 200, whiteSpace: 'pre-line'}}>{t.message}</td>
-                          <td>
-                            {!t.verified && t.status !== 'refused' && (
-                              <button onClick={() => handleAction(t.id, 'validate')}>Valider</button>
-                            )}
-                            {t.status !== 'refused' && t.verified !== true && (
-                              <button onClick={() => handleAction(t.id, 'refuse')}>Refuser</button>
-                            )}
-                            <button onClick={() => handleAction(t.id, 'delete')} className="danger">Supprimer</button>
-                          </td>
-                        </tr>
+                  <div className="dashboard-section testimonials-section">
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+                      <h2 style={{margin:0}}>Témoignages <span style={{fontSize:16,color:'#007bff'}}>({testimonials.length})</span></h2>
+                      <button onClick={refreshTestimonials} disabled={refreshing} aria-label="Rafraîchir les témoignages" style={{padding:'6px 14px',borderRadius:6,border:'1px solid #007bff',background:'#fff',color:'#007bff',fontWeight:600,cursor:'pointer'}}>
+                        {refreshing ? '...' : 'Rafraîchir'}
+                      </button>
+                    </div>
+                    <div className="testimonials-list">
+                      {paginatedTestimonials.map(t => (
+                        <div key={t.id} className="testimonial-card-admin">
+                          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                            <span style={{fontWeight:700}}>{t.name}</span>
+                            <span style={{fontSize:13,color:'#888'}}>{new Date(t.date).toLocaleString()}</span>
+                          </div>
+                          <div style={{margin:'8px 0',fontSize:15}}>{t.message}</div>
+                          {/* autres infos/réactions si besoin */}
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
-                  <div className="pagination">
-                    <button onClick={() => setTestimonialPage(p => Math.max(1, p-1))} disabled={testimonialPage === 1}>Précédent</button>
-                    <span>Page {testimonialPage} / {totalTestimonialPages}</span>
-                    <button onClick={() => setTestimonialPage(p => Math.min(totalTestimonialPages, p+1))} disabled={testimonialPage === totalTestimonialPages}>Suivant</button>
+                    </div>
+                    {/* Pagination témoignages */}
+                    {totalTestimonialPages > 1 && (
+                      <div className="pagination-container">
+                        <button onClick={() => setTestimonialPage(p => Math.max(1, p-1))} disabled={testimonialPage===1}>Précédent</button>
+                        <span style={{margin:'0 8px'}}>{testimonialPage} / {totalTestimonialPages}</span>
+                        <button onClick={() => setTestimonialPage(p => Math.min(totalTestimonialPages, p+1))} disabled={testimonialPage===totalTestimonialPages}>Suivant</button>
+                      </div>
+                    )}
+                  </div>
+                  <hr style={{margin:'2em 0'}}/>
+                  <div className="card faq-card">
+                    <div className="card-title"><span className="card-icon">🤖</span> FAQ IA des Utilisateurs</div>
+                    <div className="card-content">
+                      <button className="faq-generate-btn" onClick={handleGenerateFaq} disabled={faqLoading}>
+                        {faqLoading ? 'Analyse en cours...' : 'Générer le rapport FAQ IA'}
+                      </button>
+                      {faqError && <div className="faq-error">{faqError}</div>}
+                      {faqReport && (
+                        <div className="faq-report">
+                          <pre>{faqReport}</pre>
+                        </div>
+                      )}
+                      <hr style={{margin:'2em 0'}}/>
+                      <h3>Analyse IA personnalisée</h3>
+                      <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
+                        <input
+                          type="text"
+                          value={analyseInput}
+                          onChange={e => setAnalyseInput(e.target.value)}
+                          placeholder="Ex: Quelles sont les tendances ?"
+                          style={{flex:1,padding:8,borderRadius:4,border:'1px solid #ccc'}}
+                          disabled={analyseLoading}
+                        />
+                        <button onClick={handleAnalyseQuestions} disabled={analyseLoading||!analyseInput.trim()} className="faq-generate-btn">
+                          {analyseLoading ? 'Analyse...' : 'Analyser'}
+                        </button>
+                      </div>
+                      {analyseError && <div className="faq-error">{analyseError}</div>}
+                      {analyseResult && (
+                        <div ref={analyseResultRef} className="ia-analysis-result" style={{background:'#f8faff',border:'1px solid #b6c6e6',borderRadius:8,padding:18,marginTop:12,boxShadow:'0 2px 8px #b6c6e622'}}>
+                          <h3 style={{color:'#007bff',marginTop:0}}>Résultat de l'analyse IA</h3>
+                          {analyseResult.split('\n').map((line,i) => (
+                            <p key={i} style={{margin:'8px 0',fontSize:16,lineHeight:1.6}}>{line.replace(/(fréquent|tendance|améliorer|service|retour|négatif)/gi, match => `<span style='background:#ffe066;color:#223;padding:2px 6px;border-radius:4px'>${match}</span>`)}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   </>
                 )}
