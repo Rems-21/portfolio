@@ -26,8 +26,23 @@ const Testimonials = () => {
   const [activeReactionPicker, setActiveReactionPicker] = useState(null);
   // Notification visible et traduite
   const [showSuccess, setShowSuccess] = useState(false);
+  const [reactionError, setReactionError] = useState('');
+  const [userId, setUserId] = useState('');
   useEffect(() => {
-    if (success) setShowSuccess(true);
+    let storedId = localStorage.getItem('userId');
+    if (!storedId) {
+      storedId = crypto.randomUUID();
+      localStorage.setItem('userId', storedId);
+    }
+    setUserId(storedId);
+  }, []);
+  useEffect(() => {
+    if (success) {
+      setShowSuccess(true);
+      // Masquer automatiquement après 5 secondes
+      const timer = setTimeout(() => setShowSuccess(false), 5000);
+      return () => clearTimeout(timer);
+    }
   }, [success]);
 
   // Charger les témoignages vérifiés depuis le backend au montage
@@ -153,207 +168,223 @@ const Testimonials = () => {
     }
   };
 
-  const handleReaction = (testimonialId, sticker) => {
-    // La logique des réactions pourrait être déplacée vers le backend à l'avenir
-    setTestimonials(prevTestimonials => {
-      return prevTestimonials.map(t => {
-        if (t.id === testimonialId) {
-          const newReactions = { ...t.reactions };
-          newReactions[sticker] = (newReactions[sticker] || 0) + 1;
-          return { ...t, reactions: newReactions };
-        }
-        return t;
+  const handleReaction = async (testimonialId, sticker) => {
+    setReactionError('');
+    if (!userId) {
+      setReactionError(lang === 'fr' ? 'Identifiant utilisateur manquant.' : 'Missing user ID.');
+      return;
+    }
+    try {
+      const response = await fetch(`/api/testimonials/${testimonialId}/react`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sticker, userId })
       });
-    });
+      const data = await response.json();
+      if (response.ok) {
+        setTestimonials(prev => prev.map(t =>
+          t.id === testimonialId ? { ...t, reactions: data.reactions } : t
+        ));
+      } else {
+        setReactionError(data.message || (lang === 'fr' ? 'Erreur lors de la réaction.' : 'Reaction error.'));
+      }
+    } catch (err) {
+      setReactionError(lang === 'fr' ? 'Erreur de connexion.' : 'Connection error.');
+    }
     setActiveReactionPicker(null);
   };
+  
 
   return (
-    <section id="testimonials" className="testimonials">
-      <div className="container">
-        <h2 className="section-title">{lang === 'fr' ? 'Témoignages Clients' : 'Client Testimonials'}</h2>
-        
-        <div className="testimonials-grid">
-          {testimonials.length > 0 ? (
-            testimonials.map(testimonial => (
-              <div key={testimonial.id} className="testimonial-card">
-                <div className="testimonial-header">
-                  <div className="testimonial-author">
-                    <span className="testimonial-name">{testimonial.name}</span>
-                    <span className="testimonial-position">{testimonial.position || (lang === 'fr' ? 'Particulier' : 'Individual')}</span>
-                    {testimonial.company && <span className="testimonial-company">{testimonial.company}</span>}
-                    <span className="testimonial-date">{new Date(testimonial.date).getFullYear()}</span>
-                  </div>
-                  <div className="testimonial-rating-section">
-                    <span className="testimonial-stars">
-                      {[1,2,3,4,5].map((r) => (
-                        <span key={r} className={r <= testimonial.rating ? 'star active' : 'star'}>★</span>
-                      ))}
-                    </span>
-                    {testimonial.verified && (
-                      <span 
-                        className="testimonial-verified" 
-                        title={lang === 'fr' ? 'Vérifié' : 'Verified'}
-                        style={{ color: 'var(--gold)' }}
-                      >
-                        ✓
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <p className="testimonial-message">
-                  "{typeof testimonial.message === 'object' ? testimonial.message[lang] : testimonial.message}"
-                </p>
-                {/* La logique des réactions reste côté client pour le moment */}
-                <div className="testimonial-reactions">
-                  <div className="reactions-display">
-                    {testimonial.reactions && Object.entries(testimonial.reactions).map(([sticker, count]) => (
-                      <span key={sticker} className="reaction-chip">
-                        {sticker} {count}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="reaction-picker-container">
-                    <button 
-                      className="add-reaction-btn" 
-                      onClick={() => setActiveReactionPicker(activeReactionPicker === testimonial.id ? null : testimonial.id)}
-                    >
-                      +
-                    </button>
-                    {activeReactionPicker === testimonial.id && (
-                      <div className="reaction-picker">
-                        {availableStickers.map(sticker => (
-                          <button key={sticker} onClick={() => handleReaction(testimonial.id, sticker)}>
-                            {sticker}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p>{lang === 'fr' ? 'Aucun témoignage pour le moment.' : 'No testimonials yet.'}</p>
-          )}
+    <>
+      {/* Notification mobile-style en haut de l'écran */}
+      {showSuccess && (
+        <div className="testimonial-toast-notification">
+          <span>{success}</span>
+          <button className="close-notification" onClick={() => setShowSuccess(false)} aria-label={lang === 'fr' ? 'Fermer la notification' : 'Close notification'}>×</button>
         </div>
-
-        <div className="testimonial-form-container">
-          <h3 className="testimonial-form-title">
-            {lang === 'fr' ? 'Ajouter un témoignage' : 'Add a testimonial'}
-          </h3>
-          <div className="verification-notice">
-            <p>{lang === 'fr' 
-              ? 'Pour assurer la véracité des témoignages, nous envoyons un email de vérification à chaque soumission.' 
-              : 'To ensure testimonial authenticity, we send a verification email for each submission.'
-            }</p>
+      )}
+      <section id="testimonials" className="testimonials">
+        <div className="container">
+          <h2 className="section-title">{lang === 'fr' ? 'Témoignages Clients' : 'Client Testimonials'}</h2>
+          
+          <div className="testimonials-grid">
+            {testimonials.length > 0 ? (
+              testimonials.map(testimonial => (
+                <div key={testimonial.id} className="testimonial-card">
+                  <div className="testimonial-header">
+                    <div className="testimonial-author">
+                      <span className="testimonial-name">{testimonial.name}</span>
+                      <span className="testimonial-position">{testimonial.position || (lang === 'fr' ? 'Particulier' : 'Individual')}</span>
+                      {testimonial.company && <span className="testimonial-company">{testimonial.company}</span>}
+                      <span className="testimonial-date">{new Date(testimonial.date).getFullYear()}</span>
+                    </div>
+                    <div className="testimonial-rating-section">
+                      <span className="testimonial-stars">
+                        {[1,2,3,4,5].map((r) => (
+                          <span key={r} className={r <= testimonial.rating ? 'star active' : 'star'}>★</span>
+                        ))}
+                      </span>
+                      {testimonial.verified && (
+                        <span 
+                          className="testimonial-verified" 
+                          title={lang === 'fr' ? 'Vérifié' : 'Verified'}
+                          style={{ color: 'var(--gold)' }}
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="testimonial-message">
+                    "{typeof testimonial.message === 'object' ? testimonial.message[lang] : testimonial.message}"
+                  </p>
+                  {/* La logique des réactions reste côté client pour le moment */}
+                  <div className="testimonial-reactions">
+                    <div className="reactions-display">
+                      {testimonial.reactions && Object.entries(testimonial.reactions).map(([sticker, count]) => (
+                        <span key={sticker} className="reaction-chip">
+                          {sticker} {count}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="reaction-picker-container">
+                      <button 
+                        className="add-reaction-btn" 
+                        onClick={() => setActiveReactionPicker(activeReactionPicker === testimonial.id ? null : testimonial.id)}
+                      >
+                        +
+                      </button>
+                      {activeReactionPicker === testimonial.id && (
+                        <div className="reaction-picker">
+                          {availableStickers.map(sticker => (
+                            <button key={sticker} onClick={() => handleReaction(testimonial.id, sticker)}>
+                              {sticker}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>{lang === 'fr' ? 'Aucun témoignage pour le moment.' : 'No testimonials yet.'}</p>
+            )}
           </div>
-          {showSuccess && (
-            <div className="testimonial-success-notification">
-              <span>{success}</span>
-              <button className="close-notification" onClick={() => setShowSuccess(false)} aria-label={lang === 'fr' ? 'Fermer la notification' : 'Close notification'}>×</button>
+
+          <div className="testimonial-form-container">
+            <h3 className="testimonial-form-title">
+              {lang === 'fr' ? 'Ajouter un témoignage' : 'Add a testimonial'}
+            </h3>
+            <div className="verification-notice">
+              <p>{lang === 'fr' 
+                ? 'Pour assurer la véracité des témoignages, nous envoyons un email de vérification à chaque soumission.' 
+                : 'To ensure testimonial authenticity, we send a verification email for each submission.'
+              }</p>
             </div>
-          )}
-          {error && <div className="testimonial-error">{error}</div>}
-          <form className="testimonial-form" onSubmit={handleSubmit}>
-            <div className="form-row">
+            {error && <div className="testimonial-error">{error}</div>}
+            {reactionError && <div className="testimonial-error">{reactionError}</div>}
+            <form className="testimonial-form" onSubmit={handleSubmit}>
+              <div className="form-row">
+                <input
+                  type="text"
+                  name="name"
+                  placeholder={lang === 'fr' ? 'Votre nom complet *' : 'Your full name *'}
+                  value={form.name}
+                  onChange={handleChange}
+                  className="testimonial-input"
+                  maxLength={50}
+                  required
+                />
+                <input
+                  type="text"
+                  name="position"
+                  placeholder={lang === 'fr' ? 'Votre poste (optionnel)' : 'Your position (optional)'}
+                  value={form.position}
+                  onChange={handleChange}
+                  className="testimonial-input"
+                  maxLength={100}
+                />
+              </div>
               <input
                 type="text"
-                name="name"
-                placeholder={lang === 'fr' ? 'Votre nom complet *' : 'Your full name *'}
-                value={form.name}
-                onChange={handleChange}
-                className="testimonial-input"
-                maxLength={50}
-                required
-              />
-              <input
-                type="text"
-                name="position"
-                placeholder={lang === 'fr' ? 'Votre poste (optionnel)' : 'Your position (optional)'}
-                value={form.position}
+                name="company"
+                placeholder={lang === 'fr' ? 'Nom de l\'entreprise (optionnel)' : 'Company name (optional)'}
+                value={form.company}
                 onChange={handleChange}
                 className="testimonial-input"
                 maxLength={100}
               />
-            </div>
-            <input
-              type="text"
-              name="company"
-              placeholder={lang === 'fr' ? 'Nom de l\'entreprise (optionnel)' : 'Company name (optional)'}
-              value={form.company}
-              onChange={handleChange}
-              className="testimonial-input"
-              maxLength={100}
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder={lang === 'fr' ? 'Votre adresse email *' : 'Your email address *'}
-              value={form.email}
-              onChange={handleChange}
-              className="testimonial-input"
-              required
-            />
-            <textarea
-              name="message"
-              placeholder={lang === 'fr' ? 'Votre témoignage (20-500 caractères) *' : 'Your testimonial (20-500 characters) *'}
-              value={form.message}
-              onChange={handleChange}
-              className="testimonial-textarea"
-              rows={4}
-              minLength={20}
-              maxLength={500}
-              required
-            />
-            <div className="character-count">
-              {form.message.length}/500
-            </div>
-            <div className="testimonial-rating">
-              <span className="rating-label">{lang === 'fr' ? 'Note :' : 'Rating:'}</span>
-              {[1,2,3,4,5].map((r) => (
-                <span
-                  key={r}
-                  className={r <= form.rating ? 'star active' : 'star'}
-                  onClick={() => handleRating(r)}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={lang === 'fr' ? `${r} étoile(s)` : `${r} star(s)`}
-                >★</span>
-              ))}
-            </div>
-            <div className="verification-agreement">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="agreeToVerification"
-                  checked={form.agreeToVerification}
-                  onChange={handleChange}
-                  className="verification-checkbox"
-                  required
-                />
-                <span className="checkbox-text">
-                  {lang === 'fr' 
-                    ? 'J\'accepte que mon témoignage soit vérifié par email.'
-                    : 'I agree that my testimonial will be verified by email.'
-                  }
-                </span>
-              </label>
-            </div>
-            <button 
-              type="submit" 
-              className="testimonial-submit"
-              disabled={isSubmitting}
-            >
-              {isSubmitting 
-                ? (lang === 'fr' ? 'Envoi en cours...' : 'Sending...')
-                : (lang === 'fr' ? 'Envoyer le témoignage' : 'Submit testimonial')
-              }
-            </button>
-          </form>
+              <input
+                type="email"
+                name="email"
+                placeholder={lang === 'fr' ? 'Votre adresse email *' : 'Your email address *'}
+                value={form.email}
+                onChange={handleChange}
+                className="testimonial-input"
+                required
+              />
+              <textarea
+                name="message"
+                placeholder={lang === 'fr' ? 'Votre témoignage (20-500 caractères) *' : 'Your testimonial (20-500 characters) *'}
+                value={form.message}
+                onChange={handleChange}
+                className="testimonial-textarea"
+                rows={4}
+                minLength={20}
+                maxLength={500}
+                required
+              />
+              <div className="character-count">
+                {form.message.length}/500
+              </div>
+              <div className="testimonial-rating">
+                <span className="rating-label">{lang === 'fr' ? 'Note :' : 'Rating:'}</span>
+                {[1,2,3,4,5].map((r) => (
+                  <span
+                    key={r}
+                    className={r <= form.rating ? 'star active' : 'star'}
+                    onClick={() => handleRating(r)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={lang === 'fr' ? `${r} étoile(s)` : `${r} star(s)`}
+                  >★</span>
+                ))}
+              </div>
+              <div className="verification-agreement">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="agreeToVerification"
+                    checked={form.agreeToVerification}
+                    onChange={handleChange}
+                    className="verification-checkbox"
+                    required
+                  />
+                  <span className="checkbox-text">
+                    {lang === 'fr' 
+                      ? 'J\'accepte que mon témoignage soit vérifié par email.'
+                      : 'I agree that my testimonial will be verified by email.'
+                    }
+                  </span>
+                </label>
+              </div>
+              <button 
+                type="submit" 
+                className="testimonial-submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting 
+                  ? (lang === 'fr' ? 'Envoi en cours...' : 'Sending...')
+                  : (lang === 'fr' ? 'Envoyer le témoignage' : 'Submit testimonial')
+                }
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 };
 

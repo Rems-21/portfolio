@@ -54,23 +54,29 @@ const RemsBot = () => {
     setInput("");
     setIsLoading(true);
 
+    // Récupérer l'userId depuis le localStorage
+    let userId = localStorage.getItem('userId');
+    if (!userId) {
+      userId = crypto.randomUUID();
+      localStorage.setItem('userId', userId);
+    }
+
     try {
       const response = await fetch('/api/ask-chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: userMessage, lang })
+        body: JSON.stringify({ question: userMessage, lang, userId })
       });
       const data = await response.json();
-      
       const botResponse = data.answer;
       if (typeof botResponse === 'string') {
-        setMessages(prev => [...prev, { from: "bot", text: botResponse, lang }]);
-      } else { // C'est un objet de suggestions
-        setMessages(prev => [...prev, { from: "bot", ...botResponse }]);
+        setMessages(prev => [...prev, { from: "bot", text: botResponse, lang, ai: true }]);
+      } else {
+        setMessages(prev => [...prev, { from: "bot", ...botResponse, ai: true }]);
       }
     } catch (error) {
       console.error("Erreur de communication avec le chatbot:", error);
-      setMessages(prev => [...prev, { from: "bot", text: "Désolé, une erreur est survenue.", lang }]);
+      setMessages(prev => [...prev, { from: "bot", text: "Désolé, une erreur est survenue ou le service IA est temporairement indisponible. Veuillez réessayer plus tard.", lang, ai: true }]);
     } finally {
       setIsLoading(false);
     }
@@ -308,7 +314,14 @@ const RemsBot = () => {
                     backgroundImage: 'none',
                     transition: 'background 0.2s',
                     fontWeight: 500,
-                  }}>{msg.text}</span>
+                  }}>{msg.text}
+                    {/* Mention IA sous chaque réponse du bot */}
+                    {msg.from === 'bot' && msg.ai && (
+                      <div style={{ fontSize: isMobile ? 10 : 12, color: '#b6c6e6', marginTop: 4, fontStyle: 'italic' }}>
+                        {msg.lang === 'fr' ? 'Réponse générée par IA' : 'AI-generated response'}
+                      </div>
+                    )}
+                  </span>
                 }
               </div>
             ))}

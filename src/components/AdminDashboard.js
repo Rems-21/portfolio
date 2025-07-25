@@ -281,6 +281,33 @@ const AdminDashboard = () => {
   const paginatedQa = filteredQa.slice((qaPage-1)*qaPerPage, qaPage*qaPerPage);
   const totalQaPages = Math.ceil(filteredQa.length / qaPerPage);
 
+  const [faqReport, setFaqReport] = useState('');
+  const [faqLoading, setFaqLoading] = useState(false);
+  const [faqError, setFaqError] = useState('');
+
+  // --- Section FAQ IA ---
+  const handleGenerateFaq = async () => {
+    setFaqLoading(true);
+    setFaqError('');
+    setFaqReport('');
+    try {
+      const res = await fetch('/api/admin/faq-report', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFaqReport(data.report);
+      } else {
+        setFaqError(data.error || 'Erreur lors de la génération du rapport FAQ.');
+      }
+    } catch (e) {
+      setFaqError('Erreur réseau.');
+    } finally {
+      setFaqLoading(false);
+    }
+  };
+
   return (
     <div className="dashboard-root">
       <aside className="sidebar">
@@ -480,22 +507,18 @@ const AdminDashboard = () => {
         )}
         {activeSection === 'questions' && (
           <div className="dashboard-grid">
-            <div className="card">
-              <div className="card-title"><span className="card-icon">❓</span> Questions des Utilisateurs</div>
+            <div className="card faq-card">
+              <div className="card-title"><span className="card-icon">🤖</span> FAQ IA des Utilisateurs</div>
               <div className="card-content">
-                <p>Voici les dernières questions posées par les visiteurs. Cliquez sur une question pour l'utiliser comme base pour une nouvelle Q&A.</p>
-                <ul className="questions-list">
-                  {questions.length > 0 ? (
-                    questions.map(q => (
-                      <li key={q.id} onClick={() => handleTeachResponse(q.question)}>
-                        <span className="question-text">{q.question}</span>
-                        <span className="question-date">{new Date(q.timestamp).toLocaleString()}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <p>Aucune question d'utilisateur pour le moment.</p>
-                  )}
-                </ul>
+                <button className="faq-generate-btn" onClick={handleGenerateFaq} disabled={faqLoading}>
+                  {faqLoading ? 'Analyse en cours...' : 'Générer le rapport FAQ IA'}
+                </button>
+                {faqError && <div className="faq-error">{faqError}</div>}
+                {faqReport && (
+                  <div className="faq-report">
+                    <pre>{faqReport}</pre>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -2894,3 +2894,44 @@ section:last-of-type {
     max-width: 60px;
   }
 }
+
+.testimonial-toast-notification {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(-40px);
+  min-width: 320px;
+  max-width: 90vw;
+  background: linear-gradient(90deg, #1e90ff 60%, #00c6ff 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 1.2rem;
+  box-shadow: 0 8px 32px #1e90ff55, 0 2px 8px #0002;
+  padding: 1.1rem 2.5rem 1.1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  z-index: 9999;
+  animation: slideDownToast 0.5s cubic-bezier(.4,1.4,.6,1) forwards;
+}
+
+@keyframes slideDownToast {
+  from { opacity: 0; transform: translateX(-50%) translateY(-40px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.testimonial-toast-notification .close-notification {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: auto;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+.testimonial-toast-notification .close-notification:hover {
+  opacity: 1;
+}

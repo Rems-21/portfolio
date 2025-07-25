@@ -78,33 +78,14 @@ app.post('/api/setup-initial-data', async (req, res) => {
 
 // --- Routes d'administration protégées ---
 
-// Ajouter une nouvelle paire Q&A (protégée)
-app.post('/api/chatbot-qa', authenticateToken, async (req, res) => {
-  const { keywords, answer } = req.body;
-  if (!keywords || !answer) {
-    return res.status(400).json({ error: 'Format de données invalide.' });
-  }
-
-  try {
-    const newQA = { keywords, answer };
-    const qaData = await kv.get('qa_database') || [];
-    qaData.push(newQA);
-    await kv.set('qa_database', qaData);
-    res.status(201).json({ success: true, message: 'Connaissance ajoutée au chatbot.' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Erreur serveur.' });
-  }
-});
-
-// Récupérer toutes les questions posées par les utilisateurs (protégée)
-app.get('/api/chatbot-questions', authenticateToken, async (req, res) => {
-  try {
-    const questions = await kv.get('chatbot_questions') || [];
-    res.json(questions.reverse());
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Erreur serveur.' });
-  }
-});
+// --- Suppression des routes liées à la base de connaissance Q&A et à la gestion admin des Q&A/questions posées ---
+// Les routes suivantes sont supprimées :
+// - /api/chatbot-qa
+// - /api/admin/chatbot-qa
+// - /api/chatbot-questions
+// - /api/admin/chatbot-qa/:index
+// - /api/admin/chatbot/stats
+// Toute référence à qa_database et chatbot_questions dans Vercel KV est supprimée.
 
 // --- GESTION AVANCÉE DES TÉMOIGNAGES (ADMIN) ---
 
@@ -171,61 +152,6 @@ app.get('/api/admin/testimonials/stats', authenticateToken, async (req, res) => 
   }
 });
 
-// --- GESTION AVANCÉE DU CHATBOT (ADMIN) ---
-
-// Récupérer toutes les Q&A (protégé)
-app.get('/api/admin/chatbot-qa', authenticateToken, async (req, res) => {
-  try {
-    const qaData = await kv.get('qa_database') || [];
-    res.json(qaData);
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Erreur serveur.' });
-  }
-});
-
-// Modifier une Q&A (protégé)
-app.put('/api/admin/chatbot-qa/:index', authenticateToken, async (req, res) => {
-  const { index } = req.params;
-  const { keywords, answer } = req.body;
-  try {
-    const qaData = await kv.get('qa_database') || [];
-    if (!qaData[index]) return res.status(404).json({ success: false, message: 'Q&A introuvable.' });
-    qaData[index] = { keywords, answer };
-    await kv.set('qa_database', qaData);
-    res.json({ success: true, message: 'Q&A modifiée.' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Erreur serveur.' });
-  }
-});
-
-// Supprimer une Q&A (protégé)
-app.delete('/api/admin/chatbot-qa/:index', authenticateToken, async (req, res) => {
-  const { index } = req.params;
-  try {
-    const qaData = await kv.get('qa_database') || [];
-    if (!qaData[index]) return res.status(404).json({ success: false, message: 'Q&A introuvable.' });
-    qaData.splice(index, 1);
-    await kv.set('qa_database', qaData);
-    res.json({ success: true, message: 'Q&A supprimée.' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Erreur serveur.' });
-  }
-});
-
-// Statistiques d'utilisation du chatbot (protégé)
-app.get('/api/admin/chatbot/stats', authenticateToken, async (req, res) => {
-  try {
-    const questions = await kv.get('chatbot_questions') || [];
-    const total = questions.length;
-    // Taux de suggestions (non compris)
-    // On suppose que findBestAnswer renvoie un objet {type: 'suggestions', ...} si non compris
-    // Ici, on ne stocke pas la réponse, donc on ne peut pas calculer le taux exact sans adaptation
-    res.json({ total });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Erreur serveur.' });
-  }
-});
-
 // Route de test
 app.get('/', (req, res) => {
   res.send('Backend for portfolio is running!');
@@ -259,7 +185,8 @@ app.post('/api/testimonials', async (req, res) => {
 
   const newTestimonial = {
     id: uuidv4(), name, position, company, rating, message, email,
-    verified: false, date: new Date().toISOString()
+    verified: false, date: new Date().toISOString(),
+    reactions: {} // Ajout du champ reactions
   };
 
   try {
@@ -322,25 +249,108 @@ app.get('/api/testimonials/verify/:id', async (req, res) => {
 
 // --- Nouvelle route pour interroger le chatbot ---
 app.post('/api/ask-chatbot', async (req, res) => {
-  const { question, lang } = req.body;
-  if (!question || !lang) {
-    return res.status(400).json({ error: 'Question et langue requises.' });
-  }
-  
+  const { question, lang, userId } = req.body;
+  if (!question) return res.status(400).json({ error: 'Question requise.' });
+
+  // Enregistrer la question pour analyse future
   try {
-    const qaDatabase = await kv.get('qa_database') || [];
-    const answer = findBestAnswer(question, lang, qaDatabase);
+    const userQuestions = await kv.get('user_questions') || [];
+    userQuestions.push({
+      question: question.trim(),
+      timestamp: new Date().toISOString(),
+      userId: userId || null
+    });
+    await kv.set('user_questions', userQuestions);
+  } catch (e) {
+    console.error('Erreur lors de la sauvegarde de la question utilisateur:', e);
+  }
 
-    // Sauvegarder la question de l'utilisateur
-    const newQuestion = { id: uuidv4(), question: question.trim(), timestamp: new Date().toISOString() };
-    const questions = await kv.get('chatbot_questions') || [];
-    questions.push(newQuestion);
-    await kv.set('chatbot_questions', questions);
+  try {
+    // Prompt d'instruction blagueur et contextuel enrichi
+    const systemPrompt = `
+Tu es RemsBot, l’assistant IA officiel (et un peu rigolo) du portfolio de Remus, designer graphique, développeur web, informaticien industriel et expert en automatisme.
+Tes super-pouvoirs :
+- Répondre avec humour et clarté aux questions sur le parcours, les compétences, les projets, les services et l’expérience de Remus.
+- Expliquer de façon simple et amusante les domaines dans lesquels Remus réalise ses projets : design graphique, développement web, automatisme industriel, informatique industrielle, impression, personnalisation d’objets (tasses, mugs, etc.), agrandissement photo, infographie en général.
+- Aider les visiteurs à comprendre le contenu du site, à naviguer, ou à contacter Remus, toujours avec une touche de bonne humeur.
+- Fournir des réponses claires, concises, professionnelles, mais toujours avec une pointe d’humour ou une blague légère.
+- T’exprimer dans la langue de la question (français ou anglais).
+- Si la question sort du contexte du portfolio, reste poli, fais une blague, puis recentre la discussion sur le site ou les services de Remus.
 
+You are RemsBot, the official (and slightly funny) AI assistant for Remus’s portfolio website. Remus is a graphic designer, web developer, industrial IT specialist, and automation expert.
+Your superpowers:
+- Answer questions with humor and clarity about Remus’s background, skills, projects, services, and experience.
+- Explain in a fun and simple way the fields in which Remus works: graphic design, web development, industrial automation, industrial computing, printing, object customization (mugs, cups, etc.), photo enlargement, and general graphic design.
+- Help visitors understand the site content, navigate, or contact Remus, always with a cheerful twist.
+- Provide clear, concise, professional answers, but always with a touch of humor or a light joke.
+- Always reply in the language of the question (French or English).
+- If the question is off-topic, stay polite, make a little joke, then redirect the conversation to the site or Remus’s services.
+`;
+    const response = await axios.post(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
+      {
+        contents: [{ parts: [{ text: question }] }]
+      }
+    );
+    const answer = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "Je n'ai pas compris.";
     res.json({ answer });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Erreur serveur.' });
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ error: "Erreur lors de l'appel à Gemini." });
   }
+});
+
+// --- Route admin pour générer un rapport IA des questions fréquentes ---
+app.post('/api/admin/faq-report', authenticateToken, async (req, res) => {
+  try {
+    const userQuestions = await kv.get('user_questions') || [];
+    if (userQuestions.length === 0) {
+      return res.json({ report: "Aucune question utilisateur enregistrée." });
+    }
+    // Construit un prompt pour Gemini
+    const prompt = `Voici une liste de questions posées par les utilisateurs :\n${userQuestions.map(q => '- ' + q.question).join('\n')}\n\nAnalyse ces questions et génère un rapport synthétique des questions les plus fréquentes, sous forme de FAQ concise (max 10 questions/réponses).`;
+    const response = await axios.post(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
+      {
+        contents: [{ parts: [{ text: prompt }] }]
+      }
+    );
+    const report = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "Aucun rapport généré.";
+    res.json({ report });
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ error: "Erreur lors de la génération du rapport FAQ IA." });
+  }
+});
+
+// Ajoute la route PATCH pour les réactions sur un témoignage
+app.patch('/api/testimonials/:id/react', async (req, res) => {
+  const { id } = req.params;
+  const { sticker, userId } = req.body;
+  if (!sticker || !userId) {
+    return res.status(400).json({ message: 'Sticker et userId requis.' });
+  }
+  const allowedStickers = ['👍', '❤️', '🎉', '🚀', '🤔'];
+  if (!allowedStickers.includes(sticker)) {
+    return res.status(400).json({ message: 'Sticker non autorisé.' });
+  }
+  const testimonials = await kv.get('testimonials') || [];
+  const idx = testimonials.findIndex(t => t.id === id);
+  if (idx === -1) return res.status(404).json({ message: 'Témoignage introuvable.' });
+  // Initialiser la structure des réactions si absente
+  if (!testimonials[idx].reactions) testimonials[idx].reactions = {};
+  if (!testimonials[idx].reactionUsers) testimonials[idx].reactionUsers = {};
+  // Empêcher plusieurs réactions par le même userId pour le même sticker
+  if (!testimonials[idx].reactionUsers[sticker]) testimonials[idx].reactionUsers[sticker] = [];
+  if (testimonials[idx].reactionUsers[sticker].includes(userId)) {
+    return res.status(403).json({ message: 'Vous avez déjà réagi avec ce sticker.' });
+  }
+  // Ajoute l'userId à la liste des utilisateurs ayant réagi pour ce sticker
+  testimonials[idx].reactionUsers[sticker].push(userId);
+  // Incrémente le compteur de réactions
+  testimonials[idx].reactions[sticker] = (testimonials[idx].reactions[sticker] || 0) + 1;
+  await kv.set('testimonials', testimonials);
+  res.json({ reactions: testimonials[idx].reactions });
 });
 
 app.listen(PORT, () => {
