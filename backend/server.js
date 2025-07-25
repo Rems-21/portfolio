@@ -334,6 +334,33 @@ app.post('/api/admin/faq-report', authenticateToken, async (req, res) => {
   }
 });
 
+// --- Nouvelle route admin pour analyse IA personnalisée des questions utilisateurs ---
+app.post('/api/admin/analyse-questions', authenticateToken, async (req, res) => {
+  try {
+    const { analyseQuestion } = req.body;
+    if (!analyseQuestion || typeof analyseQuestion !== 'string' || analyseQuestion.trim().length < 5) {
+      return res.status(400).json({ error: "Question d'analyse requise (au moins 5 caractères)." });
+    }
+    const userQuestions = await kv.get('user_questions') || [];
+    if (userQuestions.length === 0) {
+      return res.json({ answer: "Aucune question utilisateur enregistrée." });
+    }
+    // Prompt pour Gemini : historique caché + question d'analyse
+    const prompt = `Voici l'historique des questions posées par les utilisateurs de ce site :\n${userQuestions.map(q => '- ' + q.question).join('\n')}\n\n${analyseQuestion.trim()}\n\nRéponds de façon synthétique, claire et professionnelle, sans afficher la liste brute des questions.`;
+    const response = await axios.post(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + process.env.GEMINI_API_KEY,
+      {
+        contents: [{ parts: [{ text: prompt }] }]
+      }
+    );
+    const answer = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "Aucune analyse générée.";
+    res.json({ answer });
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ error: "Erreur lors de l'analyse IA des questions utilisateurs." });
+  }
+});
+
 // Ajoute la route PATCH pour les réactions sur un témoignage
 app.patch('/api/testimonials/:id/react', async (req, res) => {
   const { id } = req.params;

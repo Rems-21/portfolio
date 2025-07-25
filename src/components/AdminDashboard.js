@@ -292,6 +292,38 @@ const AdminDashboard = () => {
     }
   };
 
+  // --- Analyse IA personnalisée des questions utilisateurs ---
+  const [analyseInput, setAnalyseInput] = useState('');
+  const [analyseResult, setAnalyseResult] = useState('');
+  const [analyseLoading, setAnalyseLoading] = useState(false);
+  const [analyseError, setAnalyseError] = useState('');
+
+  const handleAnalyseQuestions = async () => {
+    setAnalyseLoading(true);
+    setAnalyseError('');
+    setAnalyseResult('');
+    try {
+      const res = await fetch('/api/admin/analyse-questions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`
+        },
+        body: JSON.stringify({ analyseQuestion: analyseInput })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAnalyseResult(data.answer);
+      } else {
+        setAnalyseError(data.error || "Erreur lors de l'analyse IA.");
+      }
+    } catch (e) {
+      setAnalyseError('Erreur réseau.');
+    } finally {
+      setAnalyseLoading(false);
+    }
+  };
+
   return (
     <div className="dashboard-root">
       <aside className="sidebar">
@@ -503,6 +535,23 @@ const AdminDashboard = () => {
                     <pre>{faqReport}</pre>
                   </div>
                 )}
+                <hr style={{margin:'2em 0'}}/>
+                <h3>Analyse IA personnalisée</h3>
+                <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
+                  <input
+                    type="text"
+                    value={analyseInput}
+                    onChange={e => setAnalyseInput(e.target.value)}
+                    placeholder="Ex: Quelles sont les tendances ?"
+                    style={{flex:1,padding:8,borderRadius:4,border:'1px solid #ccc'}}
+                    disabled={analyseLoading}
+                  />
+                  <button onClick={handleAnalyseQuestions} disabled={analyseLoading||!analyseInput.trim()} className="faq-generate-btn">
+                    {analyseLoading ? 'Analyse...' : 'Analyser'}
+                  </button>
+                </div>
+                {analyseError && <div className="faq-error">{analyseError}</div>}
+                {analyseResult && <pre className="faq-report">{analyseResult}</pre>}
               </div>
             </div>
           </div>
