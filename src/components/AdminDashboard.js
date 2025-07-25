@@ -1,33 +1,40 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './AdminDashboard.css';
 
-// Fonction pour récupérer le jeton d'authentification
-const getAuthToken = () => localStorage.getItem('authToken');
-
-const SIDEBAR_SECTIONS = [
-  { key: 'stats', label: 'Statistiques', icon: '📊' },
+const SIDEBAR = [
+  { key: 'home', label: 'Accueil', icon: '🏠' },
   { key: 'testimonials', label: 'Témoignages', icon: '📝' },
-  { key: 'chatbot', label: 'Chatbot', icon: '🤖' },
-  { key: 'questions', label: 'Questions', icon: '❓' },
+  { key: 'ia', label: 'Analyse IA', icon: '🤖' },
 ];
 
 const AdminDashboard = () => {
+  const [activeSection, setActiveSection] = useState('home');
   const [testimonials, setTestimonials] = useState([]);
-  const [filter, setFilter] = useState('all');
-  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
   const [notif, setNotif] = useState('');
-  const [notifType, setNotifType] = useState('success');
-  const [loading, setLoading] = useState(true);
+  const [notifType, setNotifType] = useState('');
+  const [testimonialPage, setTestimonialPage] = useState(1);
+  const testimonialsPerPage = 8;
+  const [search, setSearch] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [faqReport, setFaqReport] = useState('');
+  const [faqLoading, setFaqLoading] = useState(false);
+  const [faqError, setFaqError] = useState('');
+  const [analyseInput, setAnalyseInput] = useState('');
+  const [analyseResult, setAnalyseResult] = useState('');
+  const [analyseLoading, setAnalyseLoading] = useState(false);
+  const [analyseError, setAnalyseError] = useState('');
+  const analyseResultRef = useRef(null);
+  const [analysisHistory, setAnalysisHistory] = useState([]);
 
-  // --- États chatbot ---
-  // Supprimer toute la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
-  // Supprimer la section/statistiques chatbot et le nombre de visiteurs
-  // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
-  // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
-  const [activeSection, setActiveSection] = useState('testimonials');
+  // Auth
+  const getAuthToken = () => localStorage.getItem('authToken');
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    window.location.href = '/login';
+  };
 
-  // --- Gestion avancée des témoignages ---
-  // Déplacer fetchTestimonials en dehors du useEffect pour qu'elle soit accessible partout
+  // Fetch testimonials
   const fetchTestimonials = async () => {
     setLoading(true);
     try {
@@ -35,71 +42,116 @@ const AdminDashboard = () => {
         headers: { 'Authorization': `Bearer ${getAuthToken()}` }
       });
       if (res.status === 401 || res.status === 403) {
-        localStorage.removeItem('authToken');
-        window.location.href = '/login';
+        logout();
         return;
       }
       const data = await res.json();
       setTestimonials(data);
-    } catch (e) {
+    } catch {
       setNotif('Erreur lors du chargement des témoignages.');
       setNotifType('error');
     } finally {
       setLoading(false);
     }
   };
+  useEffect(() => { fetchTestimonials(); }, []);
 
-  // Supprimer toute la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
-  // Supprimer la section/statistiques chatbot et le nombre de visiteurs
-  // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
-  // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
-  // Pagination témoignages
-  const [testimonialPage, setTestimonialPage] = useState(1);
-  const testimonialsPerPage = 10;
-  const paginatedTestimonials = testimonials.slice((testimonialPage-1)*testimonialsPerPage, testimonialPage*testimonialsPerPage);
-  const totalTestimonialPages = Math.ceil(testimonials.length / testimonialsPerPage);
+  // Refresh testimonials
+  const refreshTestimonials = async () => {
+    setRefreshing(true);
+    await fetchTestimonials();
+    setRefreshing(false);
+  };
 
-  // Supprimer toute la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
-  // Supprimer la section/statistiques chatbot et le nombre de visiteurs
-  // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
-  // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
-  const [faqReport, setFaqReport] = useState('');
-  const [faqLoading, setFaqLoading] = useState(false);
-  const [faqError, setFaqError] = useState('');
+  // Pagination + recherche
+  const filteredTestimonials = testimonials.filter(t => {
+    const s = search.toLowerCase();
+    return (
+      t.name?.toLowerCase().includes(s) ||
+      t.email?.toLowerCase().includes(s) ||
+      t.message?.toLowerCase().includes(s)
+    );
+  });
+  const sortedTestimonials = [...filteredTestimonials].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const totalTestimonialPages = Math.ceil(sortedTestimonials.length / testimonialsPerPage);
+  const paginatedTestimonials = sortedTestimonials.slice((testimonialPage-1)*testimonialsPerPage, testimonialPage*testimonialsPerPage);
 
-  // --- Section FAQ IA ---
-  const handleGenerateFaq = async () => {
-    setFaqLoading(true);
-    setFaqError('');
-    setFaqReport('');
+  // Actions témoignages
+  const handleDelete = async (id) => {
+    if (!window.confirm('Supprimer ce témoignage ?')) return;
     try {
-      const res = await fetch('/api/admin/faq-report', {
-        method: 'POST',
+      const res = await fetch(`/api/admin/testimonials/${id}`, {
+        method: 'DELETE',
         headers: { 'Authorization': `Bearer ${getAuthToken()}` }
       });
-      const data = await res.json();
       if (res.ok) {
-        setFaqReport(data.report);
+        setTestimonials(testimonials.filter(t => t.id !== id));
+        setNotif('Témoignage supprimé.');
+        setNotifType('success');
       } else {
-        setFaqError(data.error || 'Erreur lors de la génération du rapport FAQ.');
+        setNotif('Erreur lors de la suppression.');
+        setNotifType('error');
       }
-    } catch (e) {
-      setFaqError('Erreur réseau.');
-    } finally {
-      setFaqLoading(false);
+    } catch {
+      setNotif('Erreur réseau.');
+      setNotifType('error');
+    }
+  };
+  const handleValidate = async (id) => {
+    try {
+      const res = await fetch(`/api/admin/testimonials/${id}/validate`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`
+        },
+        body: JSON.stringify({ status: 'validated' })
+      });
+      if (res.ok) {
+        setTestimonials(testimonials.map(t => t.id === id ? { ...t, verified: true, status: 'validated' } : t));
+        setNotif('Témoignage validé.');
+        setNotifType('success');
+      } else {
+        setNotif('Erreur lors de la validation.');
+        setNotifType('error');
+      }
+    } catch {
+      setNotif('Erreur réseau.');
+      setNotifType('error');
+    }
+  };
+  const handleRefuse = async (id) => {
+    try {
+      const res = await fetch(`/api/admin/testimonials/${id}/validate`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`
+        },
+        body: JSON.stringify({ status: 'refused' })
+      });
+      if (res.ok) {
+        setTestimonials(testimonials.map(t => t.id === id ? { ...t, verified: false, status: 'refused' } : t));
+        setNotif('Témoignage refusé.');
+        setNotifType('success');
+      } else {
+        setNotif('Erreur lors du refus.');
+        setNotifType('error');
+      }
+    } catch {
+      setNotif('Erreur réseau.');
+      setNotifType('error');
     }
   };
 
-  // Supprimer toute la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
-  // Supprimer la section/statistiques chatbot et le nombre de visiteurs
-  // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
-  // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
-  // --- Analyse IA personnalisée des questions utilisateurs ---
-  const [analyseInput, setAnalyseInput] = useState('');
-  const [analyseResult, setAnalyseResult] = useState('');
-  const [analyseLoading, setAnalyseLoading] = useState(false);
-  const [analyseError, setAnalyseError] = useState('');
-
+  // Analyse IA
+  const iaSuggestions = [
+    "Quels sont les sujets les plus fréquents ?",
+    "Y a-t-il des tendances dans les questions ?",
+    "Quels sont les points à améliorer selon les utilisateurs ?",
+    "Quels services intéressent le plus ?",
+    "Y a-t-il des retours négatifs à traiter ?"
+  ];
   const handleAnalyseQuestions = async () => {
     setAnalyseLoading(true);
     setAnalyseError('');
@@ -116,6 +168,7 @@ const AdminDashboard = () => {
       const data = await res.json();
       if (res.ok) {
         setAnalyseResult(data.answer);
+        setAnalysisHistory(prev => [{ q: analyseInput, a: data.answer, date: new Date() }, ...prev.slice(0, 4)]);
       } else {
         setAnalyseError(data.error || "Erreur lors de l'analyse IA.");
       }
@@ -125,180 +178,170 @@ const AdminDashboard = () => {
       setAnalyseLoading(false);
     }
   };
-
-  // 1. Nombre total de témoignages et bouton de rafraîchissement
-  const [refreshing, setRefreshing] = useState(false);
-  const refreshTestimonials = async () => {
-    setRefreshing(true);
-    await fetchTestimonials();
-    setRefreshing(false);
-  };
-  // 3. Scroll auto vers le résultat d'analyse IA
-  const analyseResultRef = useRef(null);
   useEffect(() => {
     if (analyseResult && analyseResultRef.current) {
       analyseResultRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [analyseResult]);
 
+  // Notifications auto-hide
+  useEffect(() => {
+    if (notif) {
+      const timer = setTimeout(() => setNotif(''), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [notif]);
+
+  // Responsive sidebar
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 900);
+  useEffect(() => {
+    const onResize = () => setSidebarOpen(window.innerWidth > 900);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Render
   return (
-    <div className="dashboard-root">
-      <aside className="sidebar">
-        <div className="sidebar-logo">RemusAdmin</div>
-        <nav className="sidebar-nav">
-          {SIDEBAR_SECTIONS.map(sec => (
+    <div className="admin-root">
+      <aside className={`admin-sidebar${sidebarOpen ? '' : ' closed'}`}>
+        <div className="sidebar-logo">DRH</div>
+        <nav>
+          {SIDEBAR.map(item => (
             <button
-              key={sec.key}
-              className={`sidebar-link${activeSection === sec.key ? ' active' : ''}`}
-              onClick={() => setActiveSection(sec.key)}
+              key={item.key}
+              className={`sidebar-link${activeSection === item.key ? ' active' : ''}`}
+              onClick={() => setActiveSection(item.key)}
+              aria-label={item.label}
             >
-              <span className="sidebar-icon">{sec.icon}</span>
-              <span className="sidebar-label">{sec.label}</span>
+              <span className="sidebar-icon">{item.icon}</span>
+              <span className="sidebar-label">{item.label}</span>
             </button>
           ))}
         </nav>
-        <button className="sidebar-link logout" onClick={() => { localStorage.removeItem('authToken'); window.location.href = '/login'; }}>
+        <button className="sidebar-link logout" onClick={logout} aria-label="Déconnexion">
           <span className="sidebar-icon">🚪</span>
           <span className="sidebar-label">Déconnexion</span>
         </button>
       </aside>
-      <main className="dashboard-main">
-        <h1>Tableau de Bord - Administration</h1>
-        {notif && (
-          <div className={`notif ${notifType}`}>{notif}</div>
+      <main className="admin-main">
+        <header className="admin-header">
+          <button className="sidebar-toggle" onClick={()=>setSidebarOpen(s=>!s)} aria-label="Ouvrir/fermer le menu">☰</button>
+          <h1>Bienvenue sur l’administration DRH</h1>
+        </header>
+        {notif && <div className={`notif ${notifType}`}>{notif}</div>}
+        {activeSection === 'home' && (
+          <section className="dashboard-home">
+            <h2>Tableau de bord</h2>
+            <div className="dashboard-cards">
+              <div className="dashboard-card">
+                <div className="card-title">Témoignages</div>
+                <div className="card-value">{testimonials.length}</div>
+              </div>
+              <div className="dashboard-card">
+                <div className="card-title">Nouveaux (en attente)</div>
+                <div className="card-value">{testimonials.filter(t=>!t.verified && t.status!=='refused').length}</div>
+              </div>
+              <div className="dashboard-card">
+                <div className="card-title">Validés</div>
+                <div className="card-value">{testimonials.filter(t=>t.verified).length}</div>
+              </div>
+              <div className="dashboard-card">
+                <div className="card-title">Refusés</div>
+                <div className="card-value">{testimonials.filter(t=>t.status==='refused').length}</div>
+              </div>
+            </div>
+          </section>
         )}
         {activeSection === 'testimonials' && (
-          <div className="dashboard-grid">
-            <div className="card">
-              <div className="card-title"><span className="card-icon">📝</span> Gestion des Témoignages</div>
-              <div className="card-content">
-                <div className="filters">
-                  <div className="search-bar">
-                    <span className="search-icon">🔍</span>
-                    <input
-                      type="text"
-                      placeholder="Recherche par nom, email, message..."
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                    />
-                    {search && <button className="clear-btn" onClick={() => setSearch(' ')} title="Effacer">×</button>}
-                  </div>
-                  <select value={filter} onChange={e => setFilter(e.target.value)}>
-                    <option value="all">Tous</option>
-                    <option value="validated">Validés</option>
-                    <option value="pending">En attente</option>
-                    <option value="refused">Refusés</option>
-                  </select>
-                </div>
-                {loading ? <p>Chargement...</p> : (
-                  <>
-                  <div className="dashboard-section testimonials-section">
-                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-                      <h2 style={{margin:0}}>Témoignages <span style={{fontSize:16,color:'#007bff'}}>({testimonials.length})</span></h2>
-                      <button onClick={refreshTestimonials} disabled={refreshing} aria-label="Rafraîchir les témoignages" style={{padding:'6px 14px',borderRadius:6,border:'1px solid #007bff',background:'#fff',color:'#007bff',fontWeight:600,cursor:'pointer'}}>
-                        {refreshing ? '...' : 'Rafraîchir'}
-                      </button>
-                    </div>
-                    <div className="testimonials-list">
-                      {paginatedTestimonials.map(t => (
-                        <div key={t.id} className="testimonial-card-admin">
-                          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                            <span style={{fontWeight:700}}>{t.name}</span>
-                            <span style={{fontSize:13,color:'#888'}}>{new Date(t.date).toLocaleString()}</span>
-                          </div>
-                          <div style={{margin:'8px 0',fontSize:15}}>{t.message}</div>
-                          {/* autres infos/réactions si besoin */}
-                        </div>
-                      ))}
-                    </div>
-                    {/* Pagination témoignages */}
-                    {totalTestimonialPages > 1 && (
-                      <div className="pagination-container">
-                        <button onClick={() => setTestimonialPage(p => Math.max(1, p-1))} disabled={testimonialPage===1}>Précédent</button>
-                        <span style={{margin:'0 8px'}}>{testimonialPage} / {totalTestimonialPages}</span>
-                        <button onClick={() => setTestimonialPage(p => Math.min(totalTestimonialPages, p+1))} disabled={testimonialPage===totalTestimonialPages}>Suivant</button>
-                      </div>
-                    )}
-                  </div>
-                  <hr style={{margin:'2em 0'}}/>
-                  <div className="card faq-card">
-                    <div className="card-title"><span className="card-icon">🤖</span> FAQ IA des Utilisateurs</div>
-                    <div className="card-content">
-                      <button className="faq-generate-btn" onClick={handleGenerateFaq} disabled={faqLoading}>
-                        {faqLoading ? 'Analyse en cours...' : 'Générer le rapport FAQ IA'}
-                      </button>
-                      {faqError && <div className="faq-error">{faqError}</div>}
-                      {faqReport && (
-                        <div className="faq-report">
-                          <pre>{faqReport}</pre>
-                        </div>
-                      )}
-                      <hr style={{margin:'2em 0'}}/>
-                      <h3>Analyse IA personnalisée</h3>
-                      <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
-                        <input
-                          type="text"
-                          value={analyseInput}
-                          onChange={e => setAnalyseInput(e.target.value)}
-                          placeholder="Ex: Quelles sont les tendances ?"
-                          style={{flex:1,padding:8,borderRadius:4,border:'1px solid #ccc'}}
-                          disabled={analyseLoading}
-                        />
-                        <button onClick={handleAnalyseQuestions} disabled={analyseLoading||!analyseInput.trim()} className="faq-generate-btn">
-                          {analyseLoading ? 'Analyse...' : 'Analyser'}
-                        </button>
-                      </div>
-                      {analyseError && <div className="faq-error">{analyseError}</div>}
-                      {analyseResult && (
-                        <div ref={analyseResultRef} className="ia-analysis-result" style={{background:'#f8faff',border:'1px solid #b6c6e6',borderRadius:8,padding:18,marginTop:12,boxShadow:'0 2px 8px #b6c6e622'}}>
-                          <h3 style={{color:'#007bff',marginTop:0}}>Résultat de l'analyse IA</h3>
-                          {analyseResult.split('\n').map((line,i) => (
-                            <p key={i} style={{margin:'8px 0',fontSize:16,lineHeight:1.6}}>{line.replace(/(fréquent|tendance|améliorer|service|retour|négatif)/gi, match => `<span style='background:#ffe066;color:#223;padding:2px 6px;border-radius:4px'>${match}</span>`)}</p>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  </>
-                )}
-              </div>
+          <section className="dashboard-testimonials">
+            <div className="testimonials-header">
+              <h2>Témoignages</h2>
+              <button onClick={refreshTestimonials} disabled={refreshing} aria-label="Rafraîchir" className="refresh-btn">{refreshing ? '...' : 'Rafraîchir'}</button>
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Recherche par nom, email, message..."
+                className="testimonial-search"
+                aria-label="Recherche témoignages"
+              />
             </div>
-          </div>
+            {loading ? <div className="loading">Chargement...</div> : (
+              <div className="testimonials-list">
+                {paginatedTestimonials.length === 0 ? (
+                  <div className="empty">Aucun témoignage trouvé.</div>
+                ) : paginatedTestimonials.map(t => (
+                  <div key={t.id} className={`testimonial-card-admin ${t.verified ? 'validated' : t.status === 'refused' ? 'refused' : 'pending'}`}>
+                    <div className="testimonial-header-admin">
+                      <span className="testimonial-name-admin">{t.name}</span>
+                      <span className="testimonial-date-admin">{new Date(t.date).toLocaleString()}</span>
+                      <span className="testimonial-status-admin">{t.verified ? 'Validé' : t.status === 'refused' ? 'Refusé' : 'En attente'}</span>
+                    </div>
+                    <div className="testimonial-message-admin">{t.message}</div>
+                    <div className="testimonial-actions-admin">
+                      {!t.verified && t.status !== 'refused' && <button onClick={()=>handleValidate(t.id)} className="validate-btn">Valider</button>}
+                      {!t.verified && t.status !== 'refused' && <button onClick={()=>handleRefuse(t.id)} className="refuse-btn">Refuser</button>}
+                      <button onClick={()=>handleDelete(t.id)} className="delete-btn">Supprimer</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {totalTestimonialPages > 1 && (
+              <div className="pagination-container">
+                <button onClick={() => setTestimonialPage(p => Math.max(1, p-1))} disabled={testimonialPage===1}>Précédent</button>
+                <span>{testimonialPage} / {totalTestimonialPages}</span>
+                <button onClick={() => setTestimonialPage(p => Math.min(totalTestimonialPages, p+1))} disabled={testimonialPage===totalTestimonialPages}>Suivant</button>
+              </div>
+            )}
+          </section>
         )}
-        {activeSection === 'questions' && (
-          <div className="dashboard-grid">
-            <div className="card faq-card">
-              <div className="card-title"><span className="card-icon">🤖</span> FAQ IA des Utilisateurs</div>
-              <div className="card-content">
-                <button className="faq-generate-btn" onClick={handleGenerateFaq} disabled={faqLoading}>
-                  {faqLoading ? 'Analyse en cours...' : 'Générer le rapport FAQ IA'}
-                </button>
-                {faqError && <div className="faq-error">{faqError}</div>}
-                {faqReport && (
-                  <div className="faq-report">
-                    <pre>{faqReport}</pre>
-                  </div>
-                )}
-                <hr style={{margin:'2em 0'}}/>
-                <h3>Analyse IA personnalisée</h3>
-                <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
-                  <input
-                    type="text"
-                    value={analyseInput}
-                    onChange={e => setAnalyseInput(e.target.value)}
-                    placeholder="Ex: Quelles sont les tendances ?"
-                    style={{flex:1,padding:8,borderRadius:4,border:'1px solid #ccc'}}
-                    disabled={analyseLoading}
-                  />
-                  <button onClick={handleAnalyseQuestions} disabled={analyseLoading||!analyseInput.trim()} className="faq-generate-btn">
-                    {analyseLoading ? 'Analyse...' : 'Analyser'}
-                  </button>
-                </div>
-                {analyseError && <div className="faq-error">{analyseError}</div>}
-                {analyseResult && <pre className="faq-report">{analyseResult}</pre>}
-              </div>
+        {activeSection === 'ia' && (
+          <section className="dashboard-ia">
+            <h2>Analyse IA personnalisée</h2>
+            <div className="ia-suggestions">
+              {iaSuggestions.map(sugg => (
+                <button key={sugg} onClick={()=>setAnalyseInput(sugg)} className="ia-suggestion-btn">{sugg}</button>
+              ))}
             </div>
-          </div>
+            <div className="ia-analyse-form">
+              <input
+                type="text"
+                value={analyseInput}
+                onChange={e => setAnalyseInput(e.target.value)}
+                placeholder="Ex: Quelles sont les tendances ?"
+                className="ia-analyse-input"
+                aria-label="Question d'analyse IA"
+                onKeyDown={e => {if(e.key==='Enter') handleAnalyseQuestions();}}
+                autoFocus
+              />
+              <button onClick={handleAnalyseQuestions} disabled={analyseLoading||!analyseInput.trim()} className="ia-analyse-btn">
+                {analyseLoading ? 'Analyse...' : 'Analyser'}
+              </button>
+            </div>
+            {analyseError && <div className="notif error" role="alert">{analyseError}</div>}
+            {analyseResult && (
+              <div ref={analyseResultRef} className="ia-analysis-result">
+                <h3>Résultat de l'analyse IA</h3>
+                {analyseResult.split('\n').map((line,i) => (
+                  <p key={i}>{line}</p>
+                ))}
+              </div>
+            )}
+            {analysisHistory.length > 0 && (
+              <div className="ia-analysis-history">
+                <h4>Analyses récentes</h4>
+                <ul>
+                  {analysisHistory.map((item, idx) => (
+                    <li key={idx}>
+                      <strong>{item.q}</strong> <span style={{color:'#888',fontSize:12}}>({item.date.toLocaleString()})</span>
+                      <div style={{marginLeft:8}}>{item.a}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
         )}
       </main>
     </div>
