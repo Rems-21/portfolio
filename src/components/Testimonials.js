@@ -28,10 +28,6 @@ const Testimonials = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [reactionError, setReactionError] = useState('');
   const [userId, setUserId] = useState('');
-  const showToast = (message, type = 'info') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'info' }), 3500);
-  };
   useEffect(() => {
     let storedId = localStorage.getItem('userId');
     if (!storedId) {
@@ -189,14 +185,14 @@ const Testimonials = () => {
         setTestimonials(prev => prev.map(t =>
           t.id === testimonialId ? { ...t, reactions: data.reactions } : t
         ));
-        showToast(lang === 'fr' ? 'Réaction ajoutée !' : 'Reaction added!', 'success');
+        // showToast(lang === 'fr' ? 'Réaction ajoutée !' : 'Reaction added!', 'success');
       } else {
         setReactionError(data.message || (lang === 'fr' ? 'Erreur lors de la réaction.' : 'Reaction error.'));
-        showToast(data.message || (lang === 'fr' ? 'Erreur lors de la réaction.' : 'Reaction error.'), 'error');
+        // showToast(data.message || (lang === 'fr' ? 'Erreur lors de la réaction.' : 'Reaction error.'), 'error');
       }
     } catch (err) {
       setReactionError(lang === 'fr' ? 'Erreur de connexion.' : 'Connection error.');
-      showToast(lang === 'fr' ? 'Erreur de connexion.' : 'Connection error.', 'error');
+      // showToast(lang === 'fr' ? 'Erreur de connexion.' : 'Connection error.', 'error');
     }
     setActiveReactionPicker(null);
   };
