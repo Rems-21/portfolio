@@ -4,32 +4,44 @@ import { useTranslation } from 'react-i18next';
 // import emailjs from 'emailjs-com';
 // import emailConfig from '../emailConfig';
 
+const availableStickers = ['👍', '❤️', '🎉', '🚀', '🤔'];
+
 const Testimonials = () => {
   const { i18n } = useTranslation();
   const lang = i18n.language === 'fr' ? 'fr' : 'en';
-  
+
   const [testimonials, setTestimonials] = useState([]);
   const [form, setForm] = useState({ 
-    name: '', 
-    position: '',
-    company: '', 
-    email: '',
-    message: '', 
-    rating: 5,
-    agreeToVerification: false
+    name: '', position: '', company: '', email: '', message: '', rating: 5, agreeToVerification: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Notification visible et traduite
   const [message, setMessage] = useState({ text: '', type: '' });
   const toastTimeout = useRef(null);
+  const [carouselPage, setCarouselPage] = useState(1);
+  const [perPage, setPerPage] = useState(4);
+  const carouselRef = useRef(null);
 
-  // Affichage du toast flottant
+  // Toast flottant
   const showToast = (text, type = 'info') => {
     setMessage({ text, type });
     if (toastTimeout.current) clearTimeout(toastTimeout.current);
     toastTimeout.current = setTimeout(() => setMessage({ text: '', type: '' }), 3000);
   };
 
+  // Responsive : adapter le nombre de témoignages par page
+  useEffect(() => {
+    const updatePerPage = () => {
+      if (window.innerWidth < 600) setPerPage(1);
+      else if (window.innerWidth < 900) setPerPage(2);
+      else if (window.innerWidth < 1200) setPerPage(3);
+      else setPerPage(4);
+    };
+    updatePerPage();
+    window.addEventListener('resize', updatePerPage);
+    return () => window.removeEventListener('resize', updatePerPage);
+  }, []);
+
+  // Générer userId si besoin
   useEffect(() => {
     let storedId = localStorage.getItem('userId');
     if (!storedId) {
@@ -37,15 +49,8 @@ const Testimonials = () => {
       localStorage.setItem('userId', storedId);
     }
   }, []);
-  useEffect(() => {
-    if (message.text) {
-      // Masquer automatiquement après 5 secondes
-      const timer = setTimeout(() => setMessage({ text: '', type: '' }), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [message.text]);
 
-  // Charger les témoignages vérifiés depuis le backend au montage
+  // Charger les témoignages
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
@@ -54,15 +59,56 @@ const Testimonials = () => {
         if (response.ok) {
           setTestimonials(data);
         } else {
-          console.error("Erreur lors de la récupération des témoignages:", data.error);
+          showToast('Erreur lors de la récupération des témoignages.', 'error');
         }
       } catch (err) {
-        console.error("Erreur de connexion au backend:", err);
+        showToast('Erreur de connexion au backend.', 'error');
       }
     };
-
     fetchTestimonials();
   }, []);
+
+  // Pagination carousel
+  const sortedTestimonials = [...testimonials].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const totalPages = Math.ceil(sortedTestimonials.length / perPage);
+  const paginatedTestimonials = sortedTestimonials.slice((carouselPage-1)*perPage, carouselPage*perPage);
+
+  // Scroll horizontal lors du changement de page
+  useEffect(() => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollTo({
+        left: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, [carouselPage, perPage]);
+
+  // Réactions (stickers)
+  const handleReaction = async (testimonialId, sticker) => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      showToast(lang === 'fr' ? 'Identifiant utilisateur manquant.' : 'Missing user ID.', 'error');
+      return;
+    }
+    try {
+      const response = await fetch(`/api/testimonials/${testimonialId}/react`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sticker, userId })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setTestimonials(prev => prev.map(t =>
+          t.id === testimonialId ? { ...t, reactions: data.reactions } : t
+        ));
+        showToast(lang === 'fr' ? 'Réaction ajoutée !' : 'Reaction added!', 'success');
+      } else {
+        showToast(data.message || (lang === 'fr' ? 'Erreur lors de la réaction.' : 'Reaction error.'), 'error');
+      }
+    } catch (err) {
+      showToast(lang === 'fr' ? 'Erreur de connexion.' : 'Connection error.', 'error');
+    }
+  };
 
   // Empêche l'ajout de plusieurs témoignages par la même adresse email
   const hasAlreadyCommented = (email) => {
@@ -165,7 +211,6 @@ const Testimonials = () => {
   };
 
   
-  // Grille responsive pour les témoignages
   return (
     <>
       {/* Toast flottant en haut à droite */}
@@ -194,27 +239,26 @@ const Testimonials = () => {
       <section id="testimonials" className="testimonials">
         <div className="container">
           <h2 className="section-title">{lang === 'fr' ? 'Témoignages Clients' : 'Client Testimonials'}</h2>
-          <div className="testimonials-grid-responsive" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '24px',
-            margin: '32px 0',
-          }}>
-            {testimonials.length > 0 ? (
-              testimonials.sort((a, b) => new Date(b.date) - new Date(a.date)).map(testimonial => (
+          {/* Carousel horizontal responsive */}
+          <div style={{display:'flex',alignItems:'stretch',overflow:'hidden',position:'relative',margin:'32px 0'}}>
+            <button onClick={()=>setCarouselPage(p=>Math.max(1,p-1))} disabled={carouselPage===1} style={{background:'none',border:'none',fontSize:32,color:'#61dafb',cursor:'pointer',alignSelf:'center',opacity:carouselPage===1?0.3:1}}>&lt;</button>
+            <div ref={carouselRef} style={{flex:1,overflow:'hidden',display:'flex',gap:24}}>
+              {paginatedTestimonials.map(testimonial => (
                 <div key={testimonial.id} className="testimonial-card" style={{
-                  background: '#fff',
+                  background: '#181c24',
                   borderRadius: 14,
-                  boxShadow: '0 2px 12px #007bff11',
+                  boxShadow: '0 2px 12px #007bff33',
                   padding: '22px 28px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 8,
-                  borderLeft: '6px solid #e0e7ff',
+                  borderLeft: '6px solid #61dafb',
                   position: 'relative',
                   minWidth: 0,
                   maxWidth: 420,
                   wordBreak: 'break-word',
+                  color: '#f5f6fa',
+                  flex: 1,
                 }}>
                   <div className="testimonial-header">
                     <div className="testimonial-author">
@@ -233,7 +277,7 @@ const Testimonials = () => {
                         <span 
                           className="testimonial-verified" 
                           title={lang === 'fr' ? 'Vérifié' : 'Verified'}
-                          style={{ color: 'var(--gold)' }}
+                          style={{ color: '#ffe066' }}
                         >
                           ✓
                         </span>
@@ -243,16 +287,26 @@ const Testimonials = () => {
                   <p className="testimonial-message" style={{margin:'12px 0',fontSize:16,lineHeight:1.6}}>
                     "{typeof testimonial.message === 'object' ? testimonial.message[lang] : testimonial.message}"
                   </p>
-                  {/* Réactions et autres infos si besoin */}
+                  {/* Réactions stickers */}
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginTop:8}}>
+                    {availableStickers.map(sticker => (
+                      <button key={sticker} onClick={()=>handleReaction(testimonial.id, sticker)} style={{background:'none',border:'none',fontSize:22,cursor:'pointer',color:'#61dafb',padding:2}} title={sticker}>
+                        {sticker}
+                        <span style={{fontSize:13,marginLeft:2,color:'#ffe066'}}>
+                          {testimonial.reactions && testimonial.reactions[sticker] ? testimonial.reactions[sticker] : ''}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              ))
-            ) : (
-              <p>{lang === 'fr' ? 'Aucun témoignage pour le moment.' : 'No testimonials yet.'}</p>
-            )}
+              ))}
+            </div>
+            <button onClick={()=>setCarouselPage(p=>Math.min(totalPages,p+1))} disabled={carouselPage===totalPages} style={{background:'none',border:'none',fontSize:32,color:'#61dafb',cursor:'pointer',alignSelf:'center',opacity:carouselPage===totalPages?0.3:1}}>&gt;</button>
           </div>
-          {/* Pagination horizontale */}
-          {/* The pagination logic is removed as per the edit hint. */}
-
+          {/* Pagination info */}
+          <div style={{textAlign:'center',color:'#61dafb',fontWeight:600,marginBottom:24}}>
+            {carouselPage} / {totalPages}
+          </div>
           <div className="testimonial-form-container">
             <h3 className="testimonial-form-title">
               {lang === 'fr' ? 'Ajouter un témoignage' : 'Add a testimonial'}
