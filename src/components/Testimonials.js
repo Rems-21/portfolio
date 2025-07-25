@@ -28,7 +28,6 @@ const Testimonials = () => {
   const [reactionError, setReactionError] = useState('');
   const [userId, setUserId] = useState('');
   const [message, setMessage] = useState({ text: '', type: '' });
-  const messageTimeout = useRef(null);
 
   useEffect(() => {
     let storedId = localStorage.getItem('userId');
