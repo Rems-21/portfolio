@@ -31,7 +31,6 @@ const AdminDashboard = () => {
   const [qaSearch, setQaSearch] = useState('');
   const [qaEditIndex, setQaEditIndex] = useState(null);
   const [qaEdit, setQaEdit] = useState({ keywords_fr: '', keywords_en: '', answer_fr: '', answer_en: '' });
-  const [questions, setQuestions] = useState([]);
   const [chatbotStats, setChatbotStats] = useState(null);
   const [activeSection, setActiveSection] = useState('stats');
 
@@ -219,11 +218,6 @@ const AdminDashboard = () => {
     );
   });
   // --- Associer une question utilisateur à une Q&A ---
-  const handleTeachResponse = (questionText) => {
-    setQaEditIndex('new');
-    setQaEdit({ keywords_fr: questionText, keywords_en: questionText, answer_fr: '', answer_en: '' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
   const handleQaNewSave = async () => {
     const payload = {
       keywords: {
