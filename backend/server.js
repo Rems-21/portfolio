@@ -5,7 +5,6 @@ const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { findBestAnswer } = require('./chatbot-logic');
 const { kv } = require('@vercel/kv'); // Importation de Vercel KV
 
 const app = express();
