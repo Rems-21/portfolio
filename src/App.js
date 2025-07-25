@@ -18,7 +18,7 @@ const AdminLogin = lazy(() => import('./components/AdminLogin'));
 function App() {
   const [showSplash, setShowSplash] = useState(true);
   useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 7000);
+    const timer = setTimeout(() => setShowSplash(false), 5000);
     return () => clearTimeout(timer);
   }, []);
   if (showSplash) {

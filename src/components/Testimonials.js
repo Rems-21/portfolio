@@ -229,11 +229,12 @@ const Testimonials = () => {
           <button className="close-notification" onClick={() => setShowSuccess(false)} aria-label={lang === 'fr' ? 'Fermer la notification' : 'Close notification'}>×</button>
         </div>
       )}
-      {toast.show && (
+      {/* Désactiver l'affichage des notifications toast */}
+      {/* {toast.show && (
         <div className={`toast-notification toast-${toast.type}`} style={{position:'fixed',top:24,right:24,zIndex:9999,minWidth:220,padding:'14px 24px',borderRadius:8,background:toast.type==='success'?'#d1fae5':toast.type==='error'?'#fee2e2':'#e0e7ff',color:'#223',boxShadow:'0 4px 24px #0002',fontWeight:600,transition:'opacity 0.3s',opacity:toast.show?1:0}}>
           {toast.message}
         </div>
-      )}
+      )} */}
       <section id="testimonials" className="testimonials">
         <div className="container">
           <h2 className="section-title">{lang === 'fr' ? 'Témoignages Clients' : 'Client Testimonials'}</h2>

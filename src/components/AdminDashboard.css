@@ -298,6 +298,10 @@
   padding: 22px 28px;
   margin-top: 18px;
   box-shadow: 0 2px 8px #b6c6e622;
+  color: #223;
+}
+.ia-analysis-result p, .ia-analysis-result h3, .ia-analysis-result span, .ia-analysis-result div {
+  color: #223 !important;
 }
 .ia-analysis-history {
   margin-top: 32px;
@@ -352,21 +356,37 @@
 @media (max-width: 900px) {
   .admin-sidebar { width: 60px; }
   .sidebar-label { display: none; }
-  .admin-header { padding: 18px 12px 10px 12px; }
-  .dashboard-home, .dashboard-testimonials, .dashboard-ia { padding: 16px; }
-  .dashboard-cards { gap: 12px; }
-  .dashboard-card { padding: 18px 10px; min-width: 120px; }
-  .testimonials-list { gap: 10px; }
-  .testimonial-card-admin { padding: 12px 10px; }
-  .ia-analysis-result, .ia-analysis-history { padding: 10px 8px; }
+  .admin-header { padding: 12px 6px 8px 6px; flex-direction: row; justify-content: center; }
+  .admin-header h1 { font-size: 1.1rem; text-align: center; }
+  .dashboard-home, .dashboard-testimonials, .dashboard-ia { padding: 8px; }
+  .dashboard-cards { gap: 8px; flex-direction: column; }
+  .dashboard-card { padding: 12px 6px; min-width: 0; }
+  .testimonials-list { gap: 6px; }
+  .testimonial-card-admin { padding: 8px 6px; font-size: 0.98rem; }
+  .testimonial-header-admin { flex-direction: column; gap: 4px; align-items: flex-start; }
+  .testimonial-actions-admin { flex-direction: column; gap: 6px; }
+  .ia-suggestions, .ia-analyse-form { flex-direction: column; gap: 6px; }
+  .ia-analysis-result, .ia-analysis-history { padding: 6px 4px; font-size: 0.98rem; }
+  .pagination-container { gap: 8px; }
+  .pagination-container button { width: 38px; height: 38px; font-size: 1rem; }
+  .notif { min-width: 160px; padding: 10px 12px; font-size: 0.98rem; top: 12px; right: 12px; }
 }
 @media (max-width: 600px) {
   .admin-root { flex-direction: column; }
   .admin-sidebar { width: 100vw; flex-direction: row; height: 56px; position: fixed; bottom: 0; left: 0; right: 0; top: auto; z-index: 100; }
   .sidebar-logo { display: none; }
-  .sidebar-link { flex: 1; justify-content: center; padding: 0; font-size: 1.2rem; }
+  .sidebar-link { flex: 1; justify-content: center; padding: 0; font-size: 1.1rem; }
   .admin-main { padding-bottom: 56px; }
-  .dashboard-home, .dashboard-testimonials, .dashboard-ia { padding: 8px; }
-  .dashboard-cards { flex-direction: column; gap: 8px; }
-  .dashboard-card { min-width: 0; }
+  .dashboard-home, .dashboard-testimonials, .dashboard-ia { padding: 4px; }
+  .dashboard-cards { flex-direction: column; gap: 4px; }
+  .dashboard-card { min-width: 0; padding: 8px 2px; }
+  .testimonials-list { gap: 3px; }
+  .testimonial-card-admin { padding: 5px 2px; font-size: 0.95rem; }
+  .testimonial-header-admin { flex-direction: column; gap: 2px; align-items: flex-start; }
+  .testimonial-actions-admin { flex-direction: column; gap: 4px; }
+  .ia-suggestions, .ia-analyse-form { flex-direction: column; gap: 4px; }
+  .ia-analysis-result, .ia-analysis-history { padding: 3px 2px; font-size: 0.95rem; }
+  .pagination-container { gap: 4px; }
+  .pagination-container button { width: 32px; height: 32px; font-size: 0.95rem; }
+  .notif { min-width: 120px; padding: 7px 8px; font-size: 0.95rem; top: 6px; right: 6px; }
 } 
