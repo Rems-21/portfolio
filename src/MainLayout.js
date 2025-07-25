@@ -17,9 +17,9 @@ const MainLayout = () => (
       <Hero />
       <About />
       <Parcours />
+      <Testimonials />
       <Projects />
       <Realisations />
-      <Testimonials />
       <Contact />
     </main>
     <Footer />
