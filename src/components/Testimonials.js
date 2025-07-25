@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 // La logique emailjs est maintenant côté backend
 // import emailjs from 'emailjs-com';
@@ -28,6 +28,16 @@ const Testimonials = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [reactionError, setReactionError] = useState('');
   const [userId, setUserId] = useState('');
+  const [message, setMessage] = useState({ text: '', type: '' });
+  const messageTimeout = useRef(null);
+
+  // Affichage de la bulle de notification
+  const showMessage = (text, type = 'info') => {
+    setMessage({ text, type });
+    if (messageTimeout.current) clearTimeout(messageTimeout.current);
+    messageTimeout.current = setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+  };
+
   useEffect(() => {
     let storedId = localStorage.getItem('userId');
     if (!storedId) {
@@ -197,119 +207,102 @@ const Testimonials = () => {
     setActiveReactionPicker(null);
   };
   
-  // Pagination côté frontend
+  // Carousel horizontal
   const testimonialsPerPage = 4;
   const [testimonialPage, setTestimonialPage] = useState(1);
-  // Trier les témoignages du plus récent au plus ancien
+  const totalTestimonialPages = Math.ceil(testimonials.length / testimonialsPerPage);
   const sortedTestimonials = [...testimonials].sort((a, b) => new Date(b.date) - new Date(a.date));
-  const totalTestimonialPages = Math.ceil(sortedTestimonials.length / testimonialsPerPage);
   const paginatedTestimonials = sortedTestimonials.slice((testimonialPage-1)*testimonialsPerPage, testimonialPage*testimonialsPerPage);
+  const carouselRef = useRef(null);
 
-  // Pagination : animation fade
-  const [pageAnim, setPageAnim] = useState(false);
-  const handlePageChange = (newPage) => {
-    setPageAnim(true);
-    setTimeout(() => {
-      setTestimonialPage(newPage);
-      setPageAnim(false);
-    }, 200);
-  };
+  // Scroll horizontal lors du changement de page
+  useEffect(() => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollTo({
+        left: (testimonialPage-1) * carouselRef.current.offsetWidth,
+        behavior: 'smooth'
+      });
+    }
+  }, [testimonialPage]);
 
   return (
     <>
-      {/* Notification mobile-style en haut de l'écran */}
-      {showSuccess && (
-        <div className="testimonial-toast-notification">
-          <span>{success}</span>
-          <button className="close-notification" onClick={() => setShowSuccess(false)} aria-label={lang === 'fr' ? 'Fermer la notification' : 'Close notification'}>×</button>
+      {/* Bulle de notification fixe en haut de la page */}
+      {message.text && (
+        <div className={`testimonial-notification ${message.type}`} style={{position:'fixed',top:0,left:0,right:0,zIndex:1000,background:message.type==='error'?'#fee2e2':'#d1fae5',color:'#223',padding:'14px 24px',borderRadius:0,textAlign:'center',fontWeight:600,boxShadow:'0 2px 8px #0002'}}>
+          {message.text}
         </div>
       )}
-      {/* Désactiver l'affichage des notifications toast */}
-      {/* {toast.show && (
-        <div className={`toast-notification toast-${toast.type}`} style={{position:'fixed',top:24,right:24,zIndex:9999,minWidth:220,padding:'14px 24px',borderRadius:8,background:toast.type==='success'?'#d1fae5':toast.type==='error'?'#fee2e2':'#e0e7ff',color:'#223',boxShadow:'0 4px 24px #0002',fontWeight:600,transition:'opacity 0.3s',opacity:toast.show?1:0}}>
-          {toast.message}
-        </div>
-      )} */}
       <section id="testimonials" className="testimonials">
         <div className="container">
           <h2 className="section-title">{lang === 'fr' ? 'Témoignages Clients' : 'Client Testimonials'}</h2>
-          
-          <div className="testimonials-grid" style={{opacity: pageAnim ? 0.3 : 1, transition: 'opacity 0.2s'}}>
-            {paginatedTestimonials.length > 0 ? (
-              paginatedTestimonials.map(testimonial => (
-                <div key={testimonial.id} className="testimonial-card">
-                  <div className="testimonial-header">
-                    <div className="testimonial-author">
-                      <span className="testimonial-name">{testimonial.name}</span>
-                      <span className="testimonial-position">{testimonial.position || (lang === 'fr' ? 'Particulier' : 'Individual')}</span>
-                      {testimonial.company && <span className="testimonial-company">{testimonial.company}</span>}
-                      <span className="testimonial-date">{new Date(testimonial.date).getFullYear()}</span>
-                    </div>
-                    <div className="testimonial-rating-section">
-                      <span className="testimonial-stars">
-                        {[1,2,3,4,5].map((r) => (
-                          <span key={r} className={r <= testimonial.rating ? 'star active' : 'star'}>★</span>
-                        ))}
-                      </span>
-                      {testimonial.verified && (
-                        <span 
-                          className="testimonial-verified" 
-                          title={lang === 'fr' ? 'Vérifié' : 'Verified'}
-                          style={{ color: 'var(--gold)' }}
-                        >
-                          ✓
-                        </span>
-                      )}
-                    </div>
+          {/* Carousel horizontal */}
+          <div style={{overflowX:'auto',overflowY:'hidden',whiteSpace:'nowrap',scrollBehavior:'smooth'}} ref={carouselRef} className="testimonials-carousel">
+            {paginatedTestimonials.map(testimonial => (
+              <div key={testimonial.id} className="testimonial-card" style={{display:'inline-block',verticalAlign:'top',width:'min(320px,90vw)',marginRight:18}}>
+                <div className="testimonial-header">
+                  <div className="testimonial-author">
+                    <span className="testimonial-name">{testimonial.name}</span>
+                    <span className="testimonial-position">{testimonial.position || (lang === 'fr' ? 'Particulier' : 'Individual')}</span>
+                    {testimonial.company && <span className="testimonial-company">{testimonial.company}</span>}
+                    <span className="testimonial-date">{new Date(testimonial.date).getFullYear()}</span>
                   </div>
-                  <p className="testimonial-message">
-                    "{typeof testimonial.message === 'object' ? testimonial.message[lang] : testimonial.message}"
-                  </p>
-                  {/* La logique des réactions reste côté client pour le moment */}
-                  <div className="testimonial-reactions">
-                    <div className="reactions-display">
-                      {testimonial.reactions && Object.entries(testimonial.reactions).map(([sticker, count]) => (
-                        <span key={sticker} className="reaction-chip">
-                          {sticker} {count}
-                        </span>
+                  <div className="testimonial-rating-section">
+                    <span className="testimonial-stars">
+                      {[1,2,3,4,5].map((r) => (
+                        <span key={r} className={r <= testimonial.rating ? 'star active' : 'star'}>★</span>
                       ))}
-                    </div>
-                    <div className="reaction-picker-container">
-                      <button 
-                        className="add-reaction-btn" 
-                        onClick={() => setActiveReactionPicker(activeReactionPicker === testimonial.id ? null : testimonial.id)}
+                    </span>
+                    {testimonial.verified && (
+                      <span 
+                        className="testimonial-verified" 
+                        title={lang === 'fr' ? 'Vérifié' : 'Verified'}
+                        style={{ color: 'var(--gold)' }}
                       >
-                        +
-                      </button>
-                      {activeReactionPicker === testimonial.id && (
-                        <div className="reaction-picker">
-                          {availableStickers.map(sticker => (
-                            <button key={sticker} onClick={() => handleReaction(testimonial.id, sticker)}>
-                              {sticker}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                        ✓
+                      </span>
+                    )}
                   </div>
                 </div>
-              ))
-            ) : (
-              <p>{lang === 'fr' ? 'Aucun témoignage pour le moment.' : 'No testimonials yet.'}</p>
-            )}
+                <p className="testimonial-message">
+                  "{typeof testimonial.message === 'object' ? testimonial.message[lang] : testimonial.message}"
+                </p>
+                {/* La logique des réactions reste côté client pour le moment */}
+                <div className="testimonial-reactions">
+                  <div className="reactions-display">
+                    {testimonial.reactions && Object.entries(testimonial.reactions).map(([sticker, count]) => (
+                      <span key={sticker} className="reaction-chip">
+                        {sticker} {count}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="reaction-picker-container">
+                    <button 
+                      className="add-reaction-btn" 
+                      onClick={() => setActiveReactionPicker(activeReactionPicker === testimonial.id ? null : testimonial.id)}
+                    >
+                      +
+                    </button>
+                    {activeReactionPicker === testimonial.id && (
+                      <div className="reaction-picker">
+                        {availableStickers.map(sticker => (
+                          <button key={sticker} onClick={() => handleReaction(testimonial.id, sticker)}>
+                            {sticker}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-
-          {/* Remplacer testimonials.map(...) par paginatedTestimonials.map(...) */}
-          {/* Ajouter la pagination sous la liste : boutons Précédent/Suivant et indication de page */}
+          {/* Pagination horizontale */}
           {totalTestimonialPages > 1 && (
             <div className="pagination-container" style={{display:'flex',justifyContent:'center',alignItems:'center',gap:12,margin:'24px 0'}}>
-              <button onClick={() => handlePageChange(testimonialPage-1)} disabled={testimonialPage===1} style={{width:40,height:40,borderRadius:'50%',border:'none',background:'#e0e7ff',color:'#007bff',fontWeight:700,fontSize:18,cursor:'pointer',boxShadow:'0 2px 8px #007bff22',transition:'background 0.2s',outline:'none'}}>
-                ‹
-              </button>
+              <button onClick={() => setTestimonialPage(p=>Math.max(1,p-1))} disabled={testimonialPage===1} style={{width:40,height:40,borderRadius:'50%',border:'none',background:'#e0e7ff',color:'#007bff',fontWeight:700,fontSize:18,cursor:'pointer',boxShadow:'0 2px 8px #007bff22',transition:'background 0.2s',outline:'none'}}>‹</button>
               <span style={{fontSize:18,fontWeight:600,color:'#007bff'}}>{testimonialPage} / {totalTestimonialPages}</span>
-              <button onClick={() => handlePageChange(testimonialPage+1)} disabled={testimonialPage===totalTestimonialPages} style={{width:40,height:40,borderRadius:'50%',border:'none',background:'#e0e7ff',color:'#007bff',fontWeight:700,fontSize:18,cursor:'pointer',boxShadow:'0 2px 8px #007bff22',transition:'background 0.2s',outline:'none'}}>
-                ›
-              </button>
+              <button onClick={() => setTestimonialPage(p=>Math.min(totalTestimonialPages,p+1))} disabled={testimonialPage===totalTestimonialPages} style={{width:40,height:40,borderRadius:'50%',border:'none',background:'#e0e7ff',color:'#007bff',fontWeight:700,fontSize:18,cursor:'pointer',boxShadow:'0 2px 8px #007bff22',transition:'background 0.2s',outline:'none'}}>›</button>
             </div>
           )}
 

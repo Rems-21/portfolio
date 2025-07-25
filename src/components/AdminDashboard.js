@@ -331,7 +331,7 @@ const AdminDashboard = () => {
                 <ul>
                   {analysisHistory.map((item, idx) => (
                     <li key={idx}>
-                      <strong>{item.q}</strong> <span style={{color:'#888',fontSize:12}}>({item.date.toLocaleString()})</span>
+                      <strong style={{color:'#223'}}>{item.q}</strong> <span style={{color:'#888',fontSize:12}}>({item.date.toLocaleString()})</span>
                       <div style={{marginLeft:8}}>{item.a}</div>
                     </li>
                   ))}
