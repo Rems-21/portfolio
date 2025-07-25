@@ -244,20 +244,6 @@ const RemsBot = () => {
             }}>×</button>
           </div>
           {/* Texte d'information */}
-          <div style={{
-            background: '#e3eaff',
-            color: '#223',
-            fontSize: isMobile ? 11.5 : 13.5,
-            padding: isMobile ? '5px 8px' : '8px 18px',
-            textAlign: 'center',
-            borderBottom: '1px solid #c7d2fe',
-            fontStyle: 'italic',
-            letterSpacing: 0.1,
-          }}>
-            {lang === 'fr'
-              ? "Chaque question est traitée séparément. Les réponses ne tiennent pas compte des questions précédentes."
-              : "Each question is handled independently. Answers do not take previous questions into account."}
-          </div>
           {/* Messages */}
           <div style={{
             flex: 1,
@@ -315,16 +301,24 @@ const RemsBot = () => {
                     transition: 'background 0.2s',
                     fontWeight: 500,
                   }}>{msg.text}
-                    {/* Mention IA sous chaque réponse du bot */}
-                    {msg.from === 'bot' && msg.ai && (
-                      <div style={{ fontSize: isMobile ? 10 : 12, color: '#b6c6e6', marginTop: 4, fontStyle: 'italic' }}>
-                        {msg.lang === 'fr' ? 'Réponse générée par IA' : 'AI-generated response'}
-                      </div>
-                    )}
                   </span>
                 }
               </div>
             ))}
+            {isLoading && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '10px 0',
+                color: lightBlue,
+                fontSize: mobileFont,
+              }}>
+                <svg width={isMobile ? 20 : 24} height={isMobile ? 20 : 24} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z" fill="currentColor"/>
+                </svg>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
           {/* Saisie */}

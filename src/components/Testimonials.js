@@ -194,6 +194,13 @@ const Testimonials = () => {
     setActiveReactionPicker(null);
   };
   
+  // Pagination côté frontend
+  const testimonialsPerPage = 4;
+  const [testimonialPage, setTestimonialPage] = useState(1);
+  // Trier les témoignages du plus récent au plus ancien
+  const sortedTestimonials = [...testimonials].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const totalTestimonialPages = Math.ceil(sortedTestimonials.length / testimonialsPerPage);
+  const paginatedTestimonials = sortedTestimonials.slice((testimonialPage-1)*testimonialsPerPage, testimonialPage*testimonialsPerPage);
 
   return (
     <>
@@ -209,8 +216,8 @@ const Testimonials = () => {
           <h2 className="section-title">{lang === 'fr' ? 'Témoignages Clients' : 'Client Testimonials'}</h2>
           
           <div className="testimonials-grid">
-            {testimonials.length > 0 ? (
-              testimonials.map(testimonial => (
+            {paginatedTestimonials.length > 0 ? (
+              paginatedTestimonials.map(testimonial => (
                 <div key={testimonial.id} className="testimonial-card">
                   <div className="testimonial-header">
                     <div className="testimonial-author">
@@ -272,6 +279,30 @@ const Testimonials = () => {
               <p>{lang === 'fr' ? 'Aucun témoignage pour le moment.' : 'No testimonials yet.'}</p>
             )}
           </div>
+
+          {/* Remplacer testimonials.map(...) par paginatedTestimonials.map(...) */}
+          {/* Ajouter la pagination sous la liste : boutons Précédent/Suivant et indication de page */}
+          {totalTestimonialPages > 1 && (
+            <div className="pagination-container">
+              <button 
+                onClick={() => setTestimonialPage(prev => Math.max(1, prev - 1))} 
+                disabled={testimonialPage === 1}
+                className="pagination-button"
+              >
+                {lang === 'fr' ? 'Précédent' : 'Previous'}
+              </button>
+              <span className="pagination-info">
+                {testimonialPage} / {totalTestimonialPages}
+              </span>
+              <button 
+                onClick={() => setTestimonialPage(prev => Math.min(totalTestimonialPages, prev + 1))} 
+                disabled={testimonialPage === totalTestimonialPages}
+                className="pagination-button"
+              >
+                {lang === 'fr' ? 'Suivant' : 'Next'}
+              </button>
+            </div>
+          )}
 
           <div className="testimonial-form-container">
             <h3 className="testimonial-form-title">

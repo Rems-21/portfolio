@@ -27,12 +27,11 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   // --- États chatbot ---
-  const [qaList, setQaList] = useState([]);
-  const [qaSearch, setQaSearch] = useState('');
-  const [qaEditIndex, setQaEditIndex] = useState(null);
-  const [qaEdit, setQaEdit] = useState({ keywords_fr: '', keywords_en: '', answer_fr: '', answer_en: '' });
-  const [chatbotStats, setChatbotStats] = useState(null);
-  const [activeSection, setActiveSection] = useState('stats');
+  // Supprimer toute la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
+  // Supprimer la section/statistiques chatbot et le nombre de visiteurs
+  // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
+  // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
+  const [activeSection, setActiveSection] = useState('testimonials');
 
   // --- Gestion avancée des témoignages ---
   useEffect(() => {
@@ -67,27 +66,21 @@ const AdminDashboard = () => {
       } catch {}
     };
     // --- fetch Q&A ---
-    const fetchQa = async () => {
-      try {
-        const res = await fetch('/api/admin/chatbot-qa', {
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-        if (res.ok) setQaList(await res.json());
-      } catch {}
-    };
+    // Supprimer la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
+    // Supprimer la section/statistiques chatbot et le nombre de visiteurs
+    // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
+    // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
     // --- fetch stats chatbot ---
-    const fetchChatbotStats = async () => {
-      try {
-        const res = await fetch('/api/admin/chatbot/stats', {
-          headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-        if (res.ok) setChatbotStats(await res.json());
-      } catch {}
-    };
+    // Supprimer la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
+    // Supprimer la section/statistiques chatbot et le nombre de visiteurs
+    // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
+    // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
     fetchTestimonials();
     fetchStats();
-    fetchQa();
-    fetchChatbotStats();
+    // Supprimer la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
+    // Supprimer la section/statistiques chatbot et le nombre de visiteurs
+    // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
+    // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
   }, []);
 
   const handleAction = async (id, action) => {
@@ -140,131 +133,20 @@ const AdminDashboard = () => {
     }
   };
 
-  // --- Actions Q&A ---
-  const handleQaDelete = async (index) => {
-    if (!window.confirm('Supprimer cette Q&A ?')) return;
-    try {
-      const res = await fetch(`/api/admin/chatbot-qa/${index}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-      });
-      if (res.ok) {
-        setQaList(qaList.filter((_, i) => i !== index));
-        setNotif('Q&A supprimée.'); setNotifType('success');
-      } else {
-        setNotif('Erreur lors de la suppression.'); setNotifType('error');
-      }
-    } catch { setNotif('Erreur réseau.'); setNotifType('error'); }
-  };
-  const handleQaEdit = (index) => {
-    setQaEditIndex(index);
-    const qa = qaList[index];
-    setQaEdit({
-      keywords_fr: qa.keywords.fr?.join(', ') || '',
-      keywords_en: qa.keywords.en?.join(', ') || '',
-      answer_fr: Array.isArray(qa.answer.fr) ? qa.answer.fr.join(' | ') : qa.answer.fr || '',
-      answer_en: Array.isArray(qa.answer.en) ? qa.answer.en.join(' | ') : qa.answer.en || '',
-    });
-  };
-  const handleQaEditSave = async () => {
-    const payload = {
-      keywords: {
-        fr: qaEdit.keywords_fr.split(',').map(k => k.trim()).filter(k => k),
-        en: qaEdit.keywords_en.split(',').map(k => k.trim()).filter(k => k)
-      },
-      answer: {
-        fr: qaEdit.answer_fr.split('|').map(a => a.trim()).filter(a => a),
-        en: qaEdit.answer_en.split('|').map(a => a.trim()).filter(a => a)
-      }
-    };
-    try {
-      const res = await fetch(`/api/admin/chatbot-qa/${qaEditIndex}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`
-        },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        const newQaList = [...qaList];
-        newQaList[qaEditIndex] = payload;
-        setQaList(newQaList);
-        setNotif('Q&A modifiée.'); setNotifType('success');
-        setQaEditIndex(null);
-      } else {
-        setNotif('Erreur lors de la modification.'); setNotifType('error');
-      }
-    } catch { setNotif('Erreur réseau.'); setNotifType('error'); }
-  };
-  // --- Recherche Q&A ---
-  const filteredQa = qaList.filter(qa => {
-    const s = qaSearch.toLowerCase();
-    return (
-      qa.keywords.fr?.join(', ').toLowerCase().includes(s) ||
-      qa.keywords.en?.join(', ').toLowerCase().includes(s) ||
-      qa.answer.fr?.join(' | ').toLowerCase().includes(s) ||
-      qa.answer.en?.join(' | ').toLowerCase().includes(s)
-    );
-  });
-  // --- Associer une question utilisateur à une Q&A ---
-  const handleQaNewSave = async () => {
-    const payload = {
-      keywords: {
-        fr: qaEdit.keywords_fr.split(',').map(k => k.trim()).filter(k => k),
-        en: qaEdit.keywords_en.split(',').map(k => k.trim()).filter(k => k)
-      },
-      answer: {
-        fr: qaEdit.answer_fr.split('|').map(a => a.trim()).filter(a => a),
-        en: qaEdit.answer_en.split('|').map(a => a.trim()).filter(a => a)
-      }
-    };
-    try {
-      const res = await fetch('/api/chatbot-qa', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`
-        },
-        body: JSON.stringify(payload)
-      });
-      if (res.ok) {
-        setQaList([...qaList, payload]);
-        setNotif('Nouvelle Q&A ajoutée.'); setNotifType('success');
-        setQaEditIndex(null);
-      } else {
-        setNotif('Erreur lors de l’ajout.'); setNotifType('error');
-      }
-    } catch { setNotif('Erreur réseau.'); setNotifType('error'); }
-  };
-
-  // Filtres et recherche
-  const filteredTestimonials = testimonials.filter(t => {
-    if (filter === 'validated') return t.verified;
-    if (filter === 'refused') return t.status === 'refused';
-    if (filter === 'pending') return !t.verified && t.status !== 'refused';
-    return true;
-  }).filter(t => {
-    const s = search.toLowerCase();
-    return (
-      t.name?.toLowerCase().includes(s) ||
-      t.email?.toLowerCase().includes(s) ||
-      t.message?.toLowerCase().includes(s)
-    );
-  });
-
+  // Supprimer toute la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
+  // Supprimer la section/statistiques chatbot et le nombre de visiteurs
+  // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
+  // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
   // Pagination témoignages
   const [testimonialPage, setTestimonialPage] = useState(1);
   const testimonialsPerPage = 10;
-  const paginatedTestimonials = filteredTestimonials.slice((testimonialPage-1)*testimonialsPerPage, testimonialPage*testimonialsPerPage);
-  const totalTestimonialPages = Math.ceil(filteredTestimonials.length / testimonialsPerPage);
+  const paginatedTestimonials = testimonials.slice((testimonialPage-1)*testimonialsPerPage, testimonialPage*testimonialsPerPage);
+  const totalTestimonialPages = Math.ceil(testimonials.length / testimonialsPerPage);
 
-  // Pagination Q&A
-  const [qaPage, setQaPage] = useState(1);
-  const qaPerPage = 10;
-  const paginatedQa = filteredQa.slice((qaPage-1)*qaPerPage, qaPage*qaPerPage);
-  const totalQaPages = Math.ceil(filteredQa.length / qaPerPage);
-
+  // Supprimer toute la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
+  // Supprimer la section/statistiques chatbot et le nombre de visiteurs
+  // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
+  // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
   const [faqReport, setFaqReport] = useState('');
   const [faqLoading, setFaqLoading] = useState(false);
   const [faqError, setFaqError] = useState('');
@@ -292,6 +174,10 @@ const AdminDashboard = () => {
     }
   };
 
+  // Supprimer toute la logique et le rendu liés à la Q&A chatbot (qaList, recherche Q&A, édition, ajout, suppression, pagination Q&A, etc.)
+  // Supprimer la section/statistiques chatbot et le nombre de visiteurs
+  // Garder uniquement la gestion des témoignages (avec pagination), la FAQ IA et l'analyse IA personnalisée
+  // Réduire la structure à l'essentiel : une section pour les témoignages paginés, une pour la FAQ IA et l'analyse IA
   // --- Analyse IA personnalisée des questions utilisateurs ---
   const [analyseInput, setAnalyseInput] = useState('');
   const [analyseResult, setAnalyseResult] = useState('');
@@ -349,33 +235,6 @@ const AdminDashboard = () => {
         <h1>Tableau de Bord - Administration</h1>
         {notif && (
           <div className={`notif ${notifType}`}>{notif}</div>
-        )}
-        {activeSection === 'stats' && (
-          <div className="dashboard-grid">
-            <div className="card">
-              <div className="card-title"><span className="card-icon">📊</span> Statistiques Témoignages</div>
-              <div className="card-content">
-                {stats ? (
-                  <ul className="stats-list">
-                    <li>Total : {stats.total}</li>
-                    <li className="validated">Validés : {stats.validated}</li>
-                    <li className="refused">Refusés : {stats.refused}</li>
-                    <li className="pending">En attente : {stats.pending}</li>
-                  </ul>
-                ) : <p>Chargement...</p>}
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-title"><span className="card-icon">🤖</span> Statistiques Chatbot</div>
-              <div className="card-content">
-                {chatbotStats ? (
-                  <ul className="stats-list">
-                    <li>Questions posées : {chatbotStats.total}</li>
-                  </ul>
-                ) : <p>Chargement...</p>}
-              </div>
-            </div>
-          </div>
         )}
         {activeSection === 'testimonials' && (
           <div className="dashboard-grid">
@@ -442,80 +301,6 @@ const AdminDashboard = () => {
                     <button onClick={() => setTestimonialPage(p => Math.min(totalTestimonialPages, p+1))} disabled={testimonialPage === totalTestimonialPages}>Suivant</button>
                   </div>
                   </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-        {activeSection === 'chatbot' && (
-          <div className="dashboard-grid">
-            <div className="card">
-              <div className="card-title"><span className="card-icon">💡</span> Base de connaissances du Chatbot</div>
-              <div className="card-content">
-                <div className="filters">
-                  <div className="search-bar">
-                    <span className="search-icon">🔍</span>
-                    <input
-                      type="text"
-                      placeholder="Recherche Q&A par mot-clé..."
-                      value={qaSearch}
-                      onChange={e => setQaSearch(e.target.value)}
-                    />
-                    {qaSearch && <button className="clear-btn" onClick={() => setQaSearch('')} title="Effacer">×</button>}
-                  </div>
-                </div>
-                <table className="qa-table">
-                  <thead>
-                    <tr>
-                      <th>Mots-clés (FR)</th>
-                      <th>Mots-clés (EN)</th>
-                      <th>Réponses (FR)</th>
-                      <th>Réponses (EN)</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedQa.length === 0 ? (
-                      <tr><td colSpan={5}>Aucune Q&A trouvée.</td></tr>
-                    ) : paginatedQa.map((qa, i) => {
-                      const realIndex = (qaPage-1)*qaPerPage + i;
-                      return (
-                        <tr key={realIndex}>
-                          <td>{qa.keywords.fr?.join(', ')}</td>
-                          <td>{qa.keywords.en?.join(', ')}</td>
-                          <td>{Array.isArray(qa.answer.fr) ? qa.answer.fr.join(' | ') : qa.answer.fr}</td>
-                          <td>{Array.isArray(qa.answer.en) ? qa.answer.en.join(' | ') : qa.answer.en}</td>
-                          <td>
-                            <button onClick={() => handleQaEdit(realIndex)}>Éditer</button>
-                            <button onClick={() => handleQaDelete(realIndex)} className="danger">Supprimer</button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                <div className="pagination">
-                  <button onClick={() => setQaPage(p => Math.max(1, p-1))} disabled={qaPage === 1}>Précédent</button>
-                  <span>Page {qaPage} / {totalQaPages}</span>
-                  <button onClick={() => setQaPage(p => Math.min(totalQaPages, p+1))} disabled={qaPage === totalQaPages}>Suivant</button>
-                </div>
-                {/* Formulaire édition/ajout Q&A */}
-                {qaEditIndex !== null && (
-                  <div className="qa-edit-form">
-                    <h3>{qaEditIndex === 'new' ? 'Nouvelle Q&A' : 'Éditer Q&A'}</h3>
-                    <label htmlFor="qa-keywords-fr">Mots-clés FR</label>
-                    <input id="qa-keywords-fr" type="text" placeholder="Mots-clés FR" value={qaEdit.keywords_fr} onChange={e => setQaEdit({ ...qaEdit, keywords_fr: e.target.value })} />
-                    <label htmlFor="qa-keywords-en">Mots-clés EN</label>
-                    <input id="qa-keywords-en" type="text" placeholder="Mots-clés EN" value={qaEdit.keywords_en} onChange={e => setQaEdit({ ...qaEdit, keywords_en: e.target.value })} />
-                    <label htmlFor="qa-answer-fr">Réponses FR (séparées par |)</label>
-                    <textarea id="qa-answer-fr" placeholder="Réponses FR (séparées par |)" value={qaEdit.answer_fr} onChange={e => setQaEdit({ ...qaEdit, answer_fr: e.target.value })} />
-                    <label htmlFor="qa-answer-en">Réponses EN (séparées par |)</label>
-                    <textarea id="qa-answer-en" placeholder="Réponses EN (séparées par |)" value={qaEdit.answer_en} onChange={e => setQaEdit({ ...qaEdit, answer_en: e.target.value })} />
-                    <div className="form-actions">
-                      <button onClick={qaEditIndex === 'new' ? handleQaNewSave : handleQaEditSave} className="primary">Enregistrer</button>
-                      <button onClick={() => setQaEditIndex(null)}>Annuler</button>
-                    </div>
-                  </div>
                 )}
               </div>
             </div>
