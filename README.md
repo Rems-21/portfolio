@@ -1,5 +1,20 @@
 # Portfolio Bilingue – Fullstack React/Node.js
 
+---
+
+## 📝 Historique des modifications récentes
+- Grille responsive pour les témoignages, suppression de la pagination fixe
+- Notifications toast flottantes en haut à droite
+- Suppression des réactions/likes sur les témoignages
+- Nettoyage du code (suppression des variables/fonctions inutilisées)
+- Expérience utilisateur responsive et moderne
+- Amélioration du dashboard admin (UI, responsive, simplification)
+- Sécurité renforcée (auth admin, vérification email)
+- Correction de bugs et conformité ESLint
+- **Évolution IA : intégration Gemini, prompt personnalisé, analyse IA admin, affichage enrichi, sécurité renforcée**
+
+---
+
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://vercel.com/) [![Licence: MIT](https://img.shields.io/badge/Licence-MIT-blue.svg)](LICENSE)
 
 Un portfolio professionnel, moderne et sécurisé, développé en **React** (frontend) et **Node.js/Express** (backend), avec stockage cloud (Upstash KV), admin protégé, gestion avancée des témoignages, chatbot IA, et support multilingue (français/anglais).
@@ -22,14 +37,16 @@ Un portfolio professionnel, moderne et sécurisé, développé en **React** (fro
 
 ---
 
-## 🚀 Fonctionnalités
-- **Frontend React** moderne, responsive, multilingue (fr/en)
-- **Backend Node.js/Express** (API REST, stockage cloud Upstash KV)
-- **Admin sécurisé** (login JWT, dashboard, gestion avancée)
-- **Gestion des témoignages** (validation, refus, suppression, stats, pagination)
-- **Chatbot IA** (Q&A, suggestions, apprentissage admin, stats)
-- **Notifications visuelles, pagination, filtres, recherche**
-- **SEO optimisé, accessibilité, performance**
+## 🚀 Fonctionnalités principales (mise à jour)
+- **Témoignages** :
+  - Affichage en grille responsive (1 colonne mobile, 2-4 desktop)
+  - Plus de pagination fixe : tous les témoignages sont visibles, triés du plus récent au plus ancien
+  - Notifications toast flottantes en haut à droite pour les retours utilisateur (succès, erreur, etc.)
+  - Formulaire d’ajout avec validation et feedback via toast
+  - Vérification des témoignages par email (lien unique)
+  - Expérience utilisateur moderne, responsive, sans débordement de texte
+  - Réactions/likes supprimés pour simplification
+  - Code nettoyé, plus de variables/fonctions inutilisées
 
 ---
 
@@ -129,6 +146,25 @@ portfolio-bilingue/
 - **Suggestions intelligentes** (levenshtein, synonymes, stopwords)
 - **Apprentissage admin** : ajouter une Q&A à partir d’une question utilisateur
 - **Statistiques d’utilisation**
+
+---
+
+## 🤖 Fonctionnalités IA (mise à jour)
+- Chatbot IA basé sur Gemini (Google Generative Language)
+- Prompt personnalisé : ne répond qu’aux questions sur Remus/le site, jamais sur la mythologie ou d’autres sujets
+- Analyse IA personnalisée côté admin (questions, tendances, FAQ synthétique)
+- Affichage enrichi et responsive des résultats IA dans l’admin
+- Sécurité : prompt restrictif, clé API jamais exposée, accès admin protégé
+- Nettoyage du code IA, conformité sécurité et UX
+
+---
+
+## 🛠️ Fonctionnalités UI témoignages
+- Grille responsive sans pagination fixe
+- Toasts flottants pour les notifications
+- Formulaire avec validation et feedback immédiat
+- Sécurité : vérification par email
+- Expérience fluide sur mobile, tablette, desktop
 
 ---
 
