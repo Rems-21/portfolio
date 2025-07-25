@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './AdminDashboard.css';
 
 const SIDEBAR = [
@@ -17,9 +17,6 @@ const AdminDashboard = () => {
   const testimonialsPerPage = 8;
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  const [faqReport, setFaqReport] = useState('');
-  const [faqLoading, setFaqLoading] = useState(false);
-  const [faqError, setFaqError] = useState('');
   const [analyseInput, setAnalyseInput] = useState('');
   const [analyseResult, setAnalyseResult] = useState('');
   const [analyseLoading, setAnalyseLoading] = useState(false);
@@ -35,7 +32,7 @@ const AdminDashboard = () => {
   };
 
   // Fetch testimonials
-  const fetchTestimonials = async () => {
+  const fetchTestimonials = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/testimonials', {
@@ -53,8 +50,8 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
-  useEffect(() => { fetchTestimonials(); }, []);
+  }, []);
+  useEffect(() => { fetchTestimonials(); }, [fetchTestimonials]);
 
   // Refresh testimonials
   const refreshTestimonials = async () => {
